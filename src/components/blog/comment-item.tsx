@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { deleteComment } from '@/lib/actions/comment-actions'
 import type { CommentWithAuthor } from '@/lib/db/types'
 import { Trash2 } from 'lucide-react'
+import { getUserColor } from '@/lib/utils/colors'
 import {
   Dialog,
   DialogContent,
@@ -44,7 +45,7 @@ export function CommentItem({
       <div className="flex gap-3 border-b border-gray-100 pb-3 last:border-0">
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="font-medium">
+            <span className="font-medium" style={{ color: getUserColor(comment.author_id) }}>
               {comment.author?.display_name ?? comment.author_email?.split('@')[0] ?? '匿名用户'}
             </span>
             <span>{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>

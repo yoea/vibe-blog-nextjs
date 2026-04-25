@@ -2,6 +2,16 @@
 
 基于 Next.js 16 + Supabase 的个人博客系统。
 
+## 功能特性
+
+- 用户注册/登录/密码重置
+- Markdown 文章发布与预览
+- 文章点赞与评论（无需登录也可点赞）
+- 首页站点统计（访问量 + 点赞数，IP 去重 + 频率限制）
+- 作者列表页（莫兰迪色系用户标识 + 活跃状态）
+- ISR 5 分钟缓存，缓解 Supabase Free Tier 冷启动延迟
+- 移动端响应式适配
+
 ## 技术栈
 
 - **前端**: Next.js 16 (App Router), React 19, Tailwind CSS v4
@@ -25,9 +35,11 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 NEXT_PUBLIC_SITE_TITLE=你的网站标题
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 > Supabase 密钥在项目 Dashboard → **Settings → API** 页面获取。
+> `SUPABASE_SERVICE_ROLE_KEY` 用于作者列表等管理功能，仅在服务端使用。
 > 监听地址和端口通过 `package.json` 的 scripts 控制（`-H 0.0.0.0`），无需额外配置。
 
 ### 3. 初始化数据库
@@ -165,6 +177,7 @@ module.exports = {
       NEXT_PUBLIC_SUPABASE_URL: 'https://your-project.supabase.co',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'your_publishable_key',
       NEXT_PUBLIC_SITE_TITLE: '你的网站标题',
+      SUPABASE_SERVICE_ROLE_KEY: 'your_service_role_key',
     }
   }]
 }
@@ -182,7 +195,7 @@ module.exports = {
 |------|----------|------|
 | 首页 `/` | 5 分钟 | `revalidate = 300` |
 | 文章详情页 `/posts/[slug]` | 5 分钟 | `revalidate = 300` |
-| 其他页面 | 无缓存 | 需要实时数据（管理页、编辑器、设置页等） |
+| 缓存策略 | 5 分钟 ISR（首页、文章详情页） |
 
 - 缓存期内刷新页面直接返回缓存的 HTML，**不查询 Supabase**
 - 发布/编辑/删除文章后，`revalidatePath` 会自动清除相关缓存

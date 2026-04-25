@@ -16,3 +16,14 @@ export function formatTimeAgo(date: string | Date): string {
   if (months < 12) return `${months}个月前`
   return `${Math.floor(months / 12)}年前`
 }
+
+export function formatDaysAgo(date: string | Date): string {
+  const now = new Date()
+  const then = date instanceof Date ? date : new Date(date)
+  const diffMs = now.getTime() - then.getTime()
+  const days = Math.floor(diffMs / 86400000)
+  if (days < 0) return '今天'
+  if (days === 0) return '今天'
+  if (days === 1) return '1天前'
+  return `${days}天前`
+}

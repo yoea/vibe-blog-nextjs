@@ -8,11 +8,19 @@ import Link from 'next/link'
 import { ArrowLeft, Edit2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { formatTimeAgo } from '@/lib/utils/time'
+import type { Metadata } from 'next'
 
 export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const { data: post } = await getPostBySlug(slug)
+  if (!post) return { title: '文章不存在' }
+  return { title: post.title }
 }
 
 export default async function PostPage({ params }: PageProps) {

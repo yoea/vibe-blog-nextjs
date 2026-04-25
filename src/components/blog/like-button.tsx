@@ -2,7 +2,7 @@
 
 import { Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { toast } from 'sonner'
 import { toggleLike } from '@/lib/actions/like-actions'
 
@@ -18,19 +18,28 @@ export function LikeButton({
   const [count, setCount] = useState(initialCount)
   const [liked, setLiked] = useState(isLiked)
   const [isPending, startTransition] = useTransition()
+  const [ip, setIp] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/my-ip')
+      .then((r) => r.json())
+      .then((data) => setIp(data.ip))
+      .catch(() => setIp('unknown'))
+  }, [])
 
   const handleToggle = async () => {
+    if (!ip) return
     const newLiked = !liked
     setCount((c) => (newLiked ? c + 1 : c - 1))
     setLiked(newLiked)
 
     startTransition(async () => {
-      const result = await toggleLike(postId)
+      const result = await toggleLike(postId, ip)
       if (result.error) {
         setLiked(!newLiked)
         setCount((c) => (!newLiked ? c + 1 : c - 1))
-        if (result.error === '未登录') {
-          toast.error('请先登录后再点赞')
+        if (result.error === '无法获取IP') {
+          toast.error('点赞失败，请重试')
         }
       }
     })
@@ -41,8 +50,8 @@ export function LikeButton({
       variant="outline"
       size="sm"
       onClick={handleToggle}
-      disabled={isPending}
-      className={`gap-1.5 ${liked ? 'text-red-500 hover:text-red-600' : ''}`}
+      disabled={isPending || !ip}
+      className={`gap-1.5 active:scale-95 transition-transform ${liked ? 'text-red-500 hover:text-red-600' : ''}`}
     >
       <Heart className={`h-4 w-4 ${liked ? 'fill-current' : ''}`} />
       <span>{count}</span>

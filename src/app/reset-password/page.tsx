@@ -17,6 +17,11 @@ export default function ResetPasswordPage() {
   const router = useRouter()
 
   useEffect(() => {
+    const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
+    document.title = `重置密码 - ${siteTitle}`
+  }, [])
+
+  useEffect(() => {
     const checkSession = async () => {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()

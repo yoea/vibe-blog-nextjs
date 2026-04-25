@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: '法律信息 - 马克博客',
+export const metadata = {
+  title: '法律信息',
 }
 
 export default function LegalPage() {

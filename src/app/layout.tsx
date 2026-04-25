@@ -15,12 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadata: Metadata = {
-  title: 'Blog - Supabase + Next.js',
-  description: 'A blog built with Supabase and Next.js',
-  icons: {
-    icon: '/logo.svg',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
+  return {
+    title: {
+      default: siteTitle,
+      template: `%s - ${siteTitle}`,
+    },
+    description: 'A blog built with Supabase and Next.js',
+    icons: {
+      icon: '/logo.svg',
+    },
+  }
 }
 
 export const viewport: Viewport = {

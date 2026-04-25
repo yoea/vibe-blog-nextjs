@@ -19,9 +19,11 @@ create table if not exists posts (
 create table if not exists post_likes (
   id uuid default gen_random_uuid() primary key,
   post_id uuid references posts(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade,
+  ip varchar(45),
   created_at timestamptz default now(),
-  unique(post_id, user_id)
+  unique(post_id, user_id),
+  unique(post_id, ip)
 );
 
 -- Post comments table
@@ -77,6 +79,7 @@ create index idx_posts_author_id on posts(author_id);
 create index idx_posts_published on posts(published);
 create index idx_posts_slug on posts(slug);
 create index idx_post_likes_post_id on post_likes(post_id);
+create index idx_post_likes_ip on post_likes(ip);
 create index idx_post_comments_post_id on post_comments(post_id);
 create index idx_site_views_ip on site_views(ip);
 create index idx_site_views_accessed on site_views(accessed_at);
@@ -112,10 +115,24 @@ create policy "likes_select"
   on post_likes for select using (true);
 
 create policy "authenticated_like"
-  on post_likes for insert with check (auth.uid() = user_id);
+  on post_likes for insert with check (
+    auth.role() = 'authenticated' and auth.uid() = user_id
+  );
 
-create policy "own_like_delete"
-  on post_likes for delete using (auth.uid() = user_id);
+create policy "authenticated_unlike"
+  on post_likes for delete using (
+    auth.role() = 'authenticated' and auth.uid() = user_id
+  );
+
+create policy "anonymous_like"
+  on post_likes for insert with check (
+    auth.role() = 'anon' and ip is not null
+  );
+
+create policy "anonymous_unlike"
+  on post_likes for delete using (
+    auth.role() = 'anon' and ip is not null
+  );
 
 -- Post Comments RLS
 alter table post_comments enable row level security;

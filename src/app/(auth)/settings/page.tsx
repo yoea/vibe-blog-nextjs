@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/settings-form'
 
+export const metadata = {
+  title: '设置',
+}
+
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

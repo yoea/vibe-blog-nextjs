@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LogIn, LogOut, FileText, Settings } from 'lucide-react'
+import { LogIn, LogOut, FileText, Settings, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -45,6 +45,10 @@ export function Header({ siteTitle }: { siteTitle: string }) {
           <Link href="/" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
             <FileText className="h-4 w-4 inline mr-1" />
             首页
+          </Link>
+          <Link href="/author" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+            <Users className="h-4 w-4 inline mr-1" />
+            作者
           </Link>
           {user && (
             <>

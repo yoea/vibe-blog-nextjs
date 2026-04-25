@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { PostWithAuthor, CommentWithAuthor } from '@/lib/db/types'
+import { headers } from 'next/headers'
 
 export async function getPublishedPosts(page = 1, limit = 10) {
   const supabase = await createClient()
@@ -71,6 +72,24 @@ export async function getPostBySlug(slug: string) {
         .maybeSingle()
     : { data: null }
 
+  // For unauthenticated users, check IP-based like
+  let ipLike = false
+  if (!user) {
+    const h = await headers()
+    const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? h.get('x-real-ip')
+      ?? null
+    if (ip && ip !== 'unknown') {
+      const { data: ipData } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('ip', ip)
+        .maybeSingle()
+      ipLike = !!ipData
+    }
+  }
+
   const { count: commentCount } = await supabase
     .from('post_comments')
     .select('*', { count: 'exact', head: true })
@@ -84,7 +103,7 @@ export async function getPostBySlug(slug: string) {
     },
     like_count: likeCount ?? 0,
     comment_count: commentCount ?? 0,
-    is_liked_by_current_user: !!userLike,
+    is_liked_by_current_user: !!userLike || ipLike,
   } as unknown as PostWithAuthor
 
   return { data: result, error: null }
@@ -168,4 +187,42 @@ export async function getSiteLikesCount() {
     .from('site_likes')
     .select('*', { count: 'exact', head: true })
   return { count: count ?? 0, error: error?.message ?? null }
+}
+
+export async function getAllUsers() {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const supabase = createAdminClient()
+
+  const { data: { users }, error } = await supabase.auth.admin.listUsers()
+  if (error) return { data: [], error: error.message }
+
+  // Fetch display names from user_settings
+  const userIds = users.map((u) => u.id)
+  const settingsMap = new Map<string, string>()
+  if (userIds.length > 0) {
+    const db = await createClient()
+    const { data: settings } = await db
+      .from('user_settings')
+      .select('user_id, display_name, updated_at')
+      .in('user_id', userIds)
+    if (settings) {
+      for (const s of settings) {
+        settingsMap.set(s.user_id, s.display_name ?? '')
+      }
+    }
+  }
+
+  const oneMonthAgo = Date.now() - 30 * 86400000
+
+  return {
+    data: users.map((u) => ({
+      id: u.id,
+      email: u.email ?? '',
+      displayName: settingsMap.get(u.id) || u.email?.split('@')[0] || '',
+      createdAt: u.created_at,
+      lastSignIn: u.last_sign_in_at ?? null,
+      isActive: u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() > oneMonthAgo : false,
+    })),
+    error: null,
+  }
 }

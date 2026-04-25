@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { getPublishedPosts } from '@/lib/db/queries'
 
-export const metadata: Metadata = {
-  title: '网站地图 - 马克博客',
+export const metadata = {
+  title: '网站地图',
 }
 
 export default async function SitemapPage() {

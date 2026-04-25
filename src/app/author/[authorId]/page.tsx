@@ -4,10 +4,23 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { Metadata } from 'next'
 import type { PostWithAuthor } from '@/lib/db/types'
 
 interface PageProps {
   params: Promise<{ authorId: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { authorId } = await params
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('user_settings')
+    .select('display_name')
+    .eq('user_id', authorId)
+    .maybeSingle()
+  const name = data?.display_name ?? '作者'
+  return { title: `${name}的文章` }
 }
 
 export default async function AuthorPage({ params }: PageProps) {

@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: '隐私政策 - 马克博客',
+export const metadata = {
+  title: '隐私政策',
 }
 
 export default function PrivacyPage() {
