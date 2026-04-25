@@ -86,7 +86,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center py-1">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-xs max-w-[60%] break-all text-right">{value}</span>
+      <span className="font-mono text-xs max-w-[50%] sm:max-w-[60%] break-all text-right">{value}</span>
     </div>
   )
 }

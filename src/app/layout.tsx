@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Blog - Supabase + Next.js',
   description: 'A blog built with Supabase and Next.js',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+  },
 }
 
 export default async function RootLayout({

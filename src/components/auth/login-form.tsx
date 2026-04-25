@@ -33,12 +33,12 @@ export function LoginForm() {
       <div className="space-y-2">
         <label htmlFor="email" className="block text-sm font-medium">邮箱</label>
         <input id="email" name="email" type="email" placeholder="you@example.com" required
-          className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
       <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium">密码</label>
         <input id="password" name="password" type="password" required minLength={6}
-          className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <SubmitButton />

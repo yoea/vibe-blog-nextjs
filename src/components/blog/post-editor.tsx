@@ -49,7 +49,7 @@ export function PostEditor({ initialData }: Props) {
             required
             defaultValue={initialData?.title ?? ''}
             placeholder="文章标题"
-            className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -106,7 +106,7 @@ export function PostEditor({ initialData }: Props) {
                 onChange={(e) => setContent(e.target.value)}
                 required
                 placeholder="# 开始写作...\n支持 Markdown 语法"
-                className="font-mono text-sm p-4 h-[400px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                className="font-mono text-base md:text-sm p-4 h-[400px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <div className="border rounded-lg overflow-auto p-4 h-[400px] bg-white">
                 <p className="text-sm text-muted-foreground">输入内容后点击"预览"</p>
