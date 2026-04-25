@@ -25,12 +25,10 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 NEXT_PUBLIC_SITE_TITLE=你的网站标题
-HOSTNAME=127.0.0.1
-PORT=3000
 ```
 
 > Supabase 密钥在项目 Dashboard → **Settings → API** 页面获取。
-> `HOSTNAME=0.0.0.0` 允许局域网访问，`PORT` 可自定义端口号。
+> 监听地址和端口通过 `package.json` 的 scripts 控制（`-H 0.0.0.0`），无需额外配置。
 
 ### 3. 初始化数据库
 
@@ -88,11 +86,14 @@ npm run build
 npm start
 ```
 
-默认监听 `http://127.0.0.1:3000`，可通过 `.env.local` 中的 `HOSTNAME` 和 `PORT` 修改：
+默认监听 `http://0.0.0.0:3000`。如需修改端口：
 
-```env
-HOSTNAME=0.0.0.0  # 允许外部访问
-PORT=8080         # 修改端口
+```bash
+# 方式一：命令行参数（推荐）
+PORT=8083 npm start
+
+# 方式二：修改 package.json 中 start 脚本，添加 -p 参数
+"start": "next start -H 0.0.0.0 -p 8083"
 ```
 
 ### Step 5: 配置 Nginx 反向代理
@@ -138,11 +139,9 @@ module.exports = {
   apps: [{
     name: 'vibe-blog',
     script: 'npm',
-    args: 'start',
+    args: 'start -- -p 3000',
     env: {
       NODE_ENV: 'production',
-      HOSTNAME: '0.0.0.0',
-      PORT: '3000',
       NEXT_PUBLIC_SUPABASE_URL: 'https://your-project.supabase.co',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'your_publishable_key',
       NEXT_PUBLIC_SITE_TITLE: '你的网站标题',
@@ -170,7 +169,7 @@ module.exports = {
 | 配置项 | 说明 |
 |--------|------|
 | `.env.local` | 在服务器手动创建，填入 Supabase 连接信息 |
-| `HOSTNAME` / `PORT` | 修改监听地址和端口，默认 `127.0.0.1:3000` |
+| 监听端口 | `package.json` 中 `start` 脚本加 `-p 端口号`，或 `PORT=8083 npm start` |
 | Supabase Site URL | 从 `http://localhost:3000` 改为生产域名 |
 | Supabase Redirect URLs | 添加 `https://yourdomain.com/auth/callback` |
 | Nginx `server_name` | 改为你的生产域名 |
