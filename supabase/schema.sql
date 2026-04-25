@@ -29,6 +29,7 @@ create table if not exists post_comments (
   id uuid default gen_random_uuid() primary key,
   post_id uuid references posts(id) on delete cascade not null,
   author_id uuid references auth.users(id) on delete cascade not null,
+  author_email varchar(255),
   content text not null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -118,6 +119,9 @@ alter table user_settings enable row level security;
 
 create policy "own_settings_select"
   on user_settings for select using (auth.uid() = user_id);
+
+create policy "authenticated_settings_select_display_name"
+  on user_settings for select using (auth.role() = 'authenticated');
 
 create policy "own_settings_insert"
   on user_settings for insert with check (auth.uid() = user_id);
