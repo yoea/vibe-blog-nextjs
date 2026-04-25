@@ -34,6 +34,29 @@ create table if not exists post_comments (
   updated_at timestamptz default now()
 );
 
+-- User settings table
+create table if not exists user_settings (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade unique not null,
+  display_name varchar(100),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Site config table
+create table if not exists site_config (
+  id uuid default gen_random_uuid() primary key,
+  key varchar(100) unique not null,
+  value text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Insert default site title if not exists
+insert into site_config (key, value)
+values ('site_title', 'Blog')
+on conflict (key) do nothing;
+
 -- Indexes
 create index idx_posts_author_id on posts(author_id);
 create index idx_posts_published on posts(published);
@@ -90,6 +113,29 @@ create policy "own_comment_update"
 create policy "own_comment_delete"
   on post_comments for delete using (auth.uid() = author_id);
 
+-- User Settings RLS
+alter table user_settings enable row level security;
+
+create policy "own_settings_select"
+  on user_settings for select using (auth.uid() = user_id);
+
+create policy "own_settings_insert"
+  on user_settings for insert with check (auth.uid() = user_id);
+
+create policy "own_settings_update"
+  on user_settings for update using (auth.uid() = user_id);
+
+-- Site Config RLS
+alter table site_config enable row level security;
+
+create policy "site_config_select"
+  on site_config for select using (true);
+
+create policy "admin_site_config_update"
+  on site_config for update using (auth.uid() IN (
+    select author_id from posts where author_id = auth.uid()
+  ));
+
 -- ============================================
 -- Auto-update updated_at trigger
 -- ============================================
@@ -108,4 +154,12 @@ create trigger update_posts_updated_at
 
 create trigger update_comments_updated_at
   before update on post_comments for each row
+  execute function update_updated_at_column();
+
+create trigger update_user_settings_updated_at
+  before update on user_settings for each row
+  execute function update_updated_at_column();
+
+create trigger update_site_config_updated_at
+  before update on site_config for each row
   execute function update_updated_at_column();

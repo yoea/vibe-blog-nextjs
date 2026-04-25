@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   const { response, user } = await updateSession(request)
 
   // Protected routes require authentication
-  const protectedPaths = ['/posts/new', '/my-posts']
+  const protectedPaths = ['/posts/new', '/my-posts', '/settings']
   const isProtected = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )

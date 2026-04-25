@@ -3,6 +3,7 @@
 import { Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useTransition } from 'react'
+import { toast } from 'sonner'
 import { toggleLike } from '@/lib/actions/like-actions'
 
 export function LikeButton({
@@ -28,6 +29,9 @@ export function LikeButton({
       if (result.error) {
         setLiked(!newLiked)
         setCount((c) => (!newLiked ? c + 1 : c - 1))
+        if (result.error === '未登录') {
+          toast.error('请先登录后再点赞')
+        }
       }
     })
   }

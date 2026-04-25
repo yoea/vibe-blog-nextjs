@@ -4,6 +4,8 @@ import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Mail, AlertCircle, CheckCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function RegisterForm() {
   const [error, setError] = useState('')
@@ -21,8 +23,10 @@ export function RegisterForm() {
     })
     if (error) {
       setError(error.message)
+      toast.error(error.message)
     } else {
       setSuccess(true)
+      toast.success('注册成功！请检查邮箱完成验证')
     }
   }
 
@@ -36,20 +40,47 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="email" className="block text-sm font-medium">邮箱</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" required
-          className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium">邮箱</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required
+            className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="password" className="block text-sm font-medium">密码</label>
+          <input id="password" name="password" type="password" required minLength={6}
+            className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <SubmitButton />
+      </form>
+
+      <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-blue-900 flex items-center gap-1.5">
+          <Mail className="h-4 w-4 text-blue-500" />
+          注册说明
+        </h3>
+        <ul className="space-y-2 text-xs text-blue-800">
+          <li className="flex items-start gap-2">
+            <CheckCircle className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
+            <span>使用邮箱和密码注册，系统将发送验证邮件到你的邮箱</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
+            <span>收到邮件后点击链接完成验证，即可登录使用博客</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
+            <span>密码长度至少 6 个字符</span>
+          </li>
+        </ul>
+        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-md p-2.5 border border-amber-200">
+          <AlertCircle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+          <span>如果未收到验证邮件，请检查垃圾邮件文件夹，或在 Supabase 控制台关闭邮箱验证</span>
+        </div>
       </div>
-      <div className="space-y-2">
-        <label htmlFor="password" className="block text-sm font-medium">密码</label>
-        <input id="password" name="password" type="password" required minLength={6}
-          className="w-full px-3 py-2 rounded-md border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <SubmitButton />
-    </form>
+    </div>
   )
 }
 
@@ -57,7 +88,7 @@ function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <button type="submit" disabled={pending}
-      className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer">
+      className="w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer">
       {pending ? '注册中...' : '注册'}
     </button>
   )

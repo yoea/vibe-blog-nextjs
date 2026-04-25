@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import '@/app/globals.css'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Header } from '@/components/layout/header'
+import { Toaster } from 'sonner'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,16 +19,19 @@ export const metadata: Metadata = {
   description: 'A blog built with Supabase and Next.js',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
+
   return (
     <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50">
-        <Header />
+        <Header siteTitle={siteTitle} />
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">{children}</main>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   )

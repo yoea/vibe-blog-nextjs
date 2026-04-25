@@ -19,9 +19,9 @@ export function CommentSection({
     const result = await createComment(postId, content)
     if (!result.error && result.data) {
       setComments((prev) => [...prev, result.data])
-      return true
+      return { success: true }
     }
-    return false
+    return { success: false, error: result.error }
   }
 
   function handleDeleteComment(commentId: string) {

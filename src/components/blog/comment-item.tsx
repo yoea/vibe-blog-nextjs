@@ -45,7 +45,7 @@ export function CommentItem({
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-medium">
-              {comment.author?.email?.split('@')[0] ?? '匿名用户'}
+              {comment.author?.display_name ?? comment.author_email?.split('@')[0] ?? '匿名用户'}
             </span>
             <span>{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>
           </div>

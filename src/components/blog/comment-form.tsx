@@ -9,7 +9,7 @@ export function CommentForm({
   onSubmit,
 }: {
   postId: string
-  onSubmit: (content: string) => Promise<boolean>
+  onSubmit: (content: string) => Promise<{ success: boolean; error?: string }>
 }) {
   const [comment, setComment] = useState('')
   const [error, setError] = useState('')
@@ -21,11 +21,15 @@ export function CommentForm({
 
     setSubmitting(true)
     setError('')
-    const success = await onSubmit(comment.trim())
-    if (success) {
+    const result = await onSubmit(comment.trim())
+    if (result.success) {
       setComment('')
     } else {
-      setError('评论失败，请重试')
+      if (result.error === '未登录') {
+        setError('请先登录后再评论')
+      } else {
+        setError('评论失败，请重试')
+      }
     }
     setSubmitting(false)
   }

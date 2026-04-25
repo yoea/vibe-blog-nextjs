@@ -27,7 +27,8 @@ export interface Comment {
 }
 
 export interface CommentWithAuthor extends Comment {
-  author: { email: string | null }
+  author_email: string | null
+  author: { email: string | null; display_name: string | null }
 }
 
 export interface AuthUser {

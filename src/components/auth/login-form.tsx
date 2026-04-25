@@ -4,6 +4,7 @@ import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export function LoginForm() {
   const [error, setError] = useState('')
@@ -20,7 +21,9 @@ export function LoginForm() {
     })
     if (error) {
       setError(error.message)
+      toast.error(error.message)
     } else {
+      toast.success('登录成功')
       router.refresh()
     }
   }

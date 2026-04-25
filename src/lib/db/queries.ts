@@ -82,17 +82,38 @@ export async function getPostBySlug(slug: string) {
 
 export async function getCommentsForPost(postId: string) {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data: comments, error } = await supabase
     .from('post_comments')
-    .select(
-      `
-      id, post_id, author_id, content, created_at, updated_at
-    `)
+    .select('*')
     .eq('post_id', postId)
     .order('created_at', { ascending: true })
 
   if (error) return { data: [], error: error.message }
-  const result = data.map((item: any) => ({ ...item, author: { email: null } })) as unknown as CommentWithAuthor[]
+
+  // Fetch display names for all comment authors
+  const authorIds = [...new Set(comments.map((c) => c.author_id))]
+  let settingsMap = new Map<string, string>()
+  if (authorIds.length > 0) {
+    const { data: settings } = await supabase
+      .from('user_settings')
+      .select('user_id, display_name')
+      .in('user_id', authorIds)
+
+    if (settings) {
+      for (const s of settings) {
+        if (s.display_name) settingsMap.set(s.user_id, s.display_name)
+      }
+    }
+  }
+
+  const result = comments.map((item) => ({
+    ...item,
+    author_email: item.author_email ?? null,
+    author: {
+      email: null,
+      display_name: settingsMap.get(item.author_id) ?? null,
+    },
+  })) as unknown as CommentWithAuthor[]
   return { data: result, error: null }
 }
 
@@ -106,4 +127,19 @@ export async function getPostsByAuthor(authorId: string) {
 
   if (error) return { data: [], error: error.message }
   return { data, error: null }
+}
+
+export async function getUserSettings() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { data: null, error: '未登录' }
+
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (error) return { data: null, error: error.message }
+  return { data: { ...data, email: user.email, created_at: user.created_at }, error: null }
 }

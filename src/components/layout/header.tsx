@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LogOut, FileText, PlusCircle, User } from 'lucide-react'
+import { LogOut, FileText, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
-export function Header() {
+export function Header({ siteTitle }: { siteTitle: string }) {
   const [user, setUser] = useState<{ email: string | null } | null>(null)
   const router = useRouter()
 
@@ -29,6 +30,7 @@ export function Header() {
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
+    toast.info('已退出登录')
     router.push('/')
   }
 
@@ -36,7 +38,7 @@ export function Header() {
     <header className="border-b bg-white">
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-bold text-lg hover:text-primary transition-colors">
-          Blog
+          {siteTitle}
         </Link>
         <nav className="flex items-center gap-2">
           <Link href="/" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
@@ -45,13 +47,13 @@ export function Header() {
           </Link>
           {user && (
             <>
-              <Link href="/posts/new" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-                <PlusCircle className="h-4 w-4 inline mr-1" />
-                写文章
-              </Link>
               <Link href="/my-posts" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-                <User className="h-4 w-4 inline mr-1" />
-                我的文章
+                <FileText className="h-4 w-4 inline mr-1" />
+                我的
+              </Link>
+              <Link href="/settings" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+                <Settings className="h-4 w-4 inline mr-1" />
+                设置
               </Link>
               <button onClick={handleLogout}
                 className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">

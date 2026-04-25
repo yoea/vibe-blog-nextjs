@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Calendar, Heart, MessageSquare } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import type { PostWithAuthor } from '@/lib/db/types'
 
 export function PostCard({ post }: { post: PostWithAuthor }) {
@@ -9,12 +8,7 @@ export function PostCard({ post }: { post: PostWithAuthor }) {
     <Card className="hover:shadow-md transition-shadow">
       <Link href={`/posts/${post.slug}`} className="block">
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="text-xl font-semibold leading-tight">{post.title}</h2>
-            {post.published && (
-              <Badge variant="secondary" className="shrink-0">已发布</Badge>
-            )}
-          </div>
+          <h2 className="text-xl font-semibold leading-tight">{post.title}</h2>
         </CardHeader>
         <CardContent className="space-y-3">
           {post.excerpt && (

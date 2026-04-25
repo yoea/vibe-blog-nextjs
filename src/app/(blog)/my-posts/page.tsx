@@ -1,9 +1,7 @@
 import { getPostsByAuthor } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
+import { PostCard } from '@/components/blog/my-post-card'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { PostActions } from '@/components/blog/post-actions'
 
 export default async function MyPostsPage() {
   const supabase = await createClient()
@@ -34,26 +32,7 @@ export default async function MyPostsPage() {
       ) : (
         <div className="grid gap-4">
           {posts.map((post) => (
-            <Card key={post.id}>
-              <CardHeader className="pb-2 space-y-0">
-                <Link href={`/posts/${post.slug}`}>
-                  <h2 className="text-xl font-semibold">{post.title}</h2>
-                </Link>
-              </CardHeader>
-              <CardContent className="space-y-3 pb-4">
-                {post.excerpt && (
-                  <p className="text-sm text-muted-foreground line-clamp-1">
-                    {post.excerpt}
-                  </p>
-                )}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{new Date(post.created_at).toLocaleDateString('zh-CN')}</span>
-                  <Badge variant={post.published ? 'secondary' : 'outline'}>
-                    {post.published ? '已发布' : '草稿'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       )}

@@ -18,13 +18,21 @@ export async function createComment(postId: string, content: string): Promise<{ 
     .insert({
       post_id: postId,
       author_id: user.id,
+      author_email: user.email,
       content: content.trim(),
     })
     .select('*')
     .single()
 
   if (error) return { error: error.message }
-  return { data: { ...comment, author: { email: user.email } } }
+
+  const { data: settings } = await supabase
+    .from('user_settings')
+    .select('display_name')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  return { data: { ...comment, author_email: user.email, author: { email: user.email, display_name: settings?.display_name ?? null } } }
 }
 
 export async function deleteComment(commentId: string, postId: string): Promise<{ error?: string }> {
