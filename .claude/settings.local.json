@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote *)",
+      "Bash(mkdir -p 'src/app/\\(blog\\)/posts-edit/[slug]')",
+      "Bash(rm -rf 'src/app/\\(blog\\)/posts/[slug]/edit')",
+      "Bash(npx tsc *)",
+      "Bash(npx shadcn@latest add dropdown-menu -y)"
+    ]
+  }
+}

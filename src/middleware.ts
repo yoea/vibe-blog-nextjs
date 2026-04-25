@@ -1,0 +1,32 @@
+import { type NextRequest, NextResponse } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+  const { response, user } = await updateSession(request)
+
+  // Protected routes require authentication
+  const protectedPaths = ['/posts/new', '/my-posts']
+  const isProtected = protectedPaths.some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+  if (isProtected && !user) {
+    const url = new URL('/login', request.url)
+    url.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Auth pages redirect to home if already logged in
+  const authPaths = ['/login', '/register']
+  const isAuthPath = authPaths.some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+  if (isAuthPath && user) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+}
