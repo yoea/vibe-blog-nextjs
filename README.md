@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blog
 
-## Getting Started
+基于 Next.js 16 + Supabase 的个人博客系统。
 
-First, run the development server:
+## 技术栈
+
+- **前端**: Next.js 16 (App Router), React 19, Tailwind CSS v4
+- **后端**: Supabase (PostgreSQL, Auth, RLS)
+- **UI**: shadcn/ui, Lucide Icons, Sonner Toast
+- **Markdown**: react-markdown + remark-gfm + remark-breaks + rehype-highlight
+
+## 本地开发
+
+### 1. 安装依赖
+
+```bash
+npm install
+```
+
+### 2. 配置环境变量
+
+复制 `.env.local.example` 为 `.env.local` 并填入你的 Supabase 配置：
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+NEXT_PUBLIC_SITE_TITLE=你的网站标题
+```
+
+> Supabase 密钥在项目 Dashboard → **Settings → API** 页面获取。
+
+### 3. 初始化数据库
+
+在 Supabase Dashboard 的 **SQL Editor** 中执行 `supabase/schema.sql`，创建所有表和 RLS 策略。
+
+### 4. 启动开发服务器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000) 访问。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 生产环境部署（Node.js 服务器）
 
-## Learn More
+### 前置要求
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js >= 20.x（推荐 LTS）
+- Nginx（反向代理 + HTTPS）
+- PM2（进程守护，可选）
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Step 1: 拉取代码并安装依赖
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+git clone <你的仓库地址> /path/to/app
+cd /path/to/app
+npm install
+```
 
-## Deploy on Vercel
+### Step 2: 创建环境变量文件
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cat > .env.local << 'EOF'
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+NEXT_PUBLIC_SITE_TITLE=你的网站标题
+EOF
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> `.env.local` 已在 `.gitignore` 中忽略，**不要提交到仓库**。
+
+### Step 3: 构建生产版本
+
+```bash
+npm run build
+```
+
+### Step 4: 启动服务
+
+```bash
+npm start
+```
+
+默认监听 `http://localhost:3000`。
+
+### Step 5: 配置 Nginx 反向代理
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Step 6: 启用 HTTPS（可选）
+
+```bash
+sudo certbot --nginx -d yourdomain.com
+```
+
+### Step 7: 进程守护（PM2）
+
+```bash
+npm install -g pm2
+pm2 start npm --name "vibe-blog" -- start
+pm2 save
+pm2 startup
+```
+
+---
+
+## Supabase 生产环境配置
+
+部署到生产域名后，需要在 Supabase Dashboard 中更新回调地址：
+
+1. 进入项目 → **Authentication** → **URL Configuration**
+2. 将 **Site URL** 改为你的生产域名（如 `https://yourdomain.com`）
+3. 在 **Redirect URLs** 中添加：`https://yourdomain.com/auth/callback`
+
+这样邮箱验证、密码重置等功能才能正常工作。
+
+## 生产环境需变更的配置清单
+
+| 配置项 | 说明 |
+|--------|------|
+| `.env.local` | 在服务器手动创建，填入 Supabase 连接信息 |
+| Supabase Site URL | 从 `http://localhost:3000` 改为生产域名 |
+| Supabase Redirect URLs | 添加 `https://yourdomain.com/auth/callback` |
+| Nginx `server_name` | 改为你的生产域名 |
