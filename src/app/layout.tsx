@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Blog - Supabase + Next.js',
   description: 'A blog built with Supabase and Next.js',
+  icons: {
+    icon: '/logo.svg',
+  },
 }
 
 export const viewport: Viewport = {
