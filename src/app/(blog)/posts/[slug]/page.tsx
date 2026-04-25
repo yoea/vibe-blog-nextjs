@@ -77,7 +77,7 @@ export default async function PostPage({ params }: PageProps) {
 
       <Separator />
 
-      <CommentSection postId={post.id} comments={comments ?? []} />
+      <CommentSection postId={post.id} initialComments={comments ?? []} />
     </div>
   )
 }

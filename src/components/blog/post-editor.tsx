@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { MarkdownPreview } from '@/components/shared/markdown-preview'
 import { Separator } from '@/components/ui/separator'
 import { savePost } from '@/lib/actions/post-actions'
@@ -13,13 +14,25 @@ interface Props {
 
 export function PostEditor({ initialData }: Props) {
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
+  const [error, setError] = useState('')
+  const [content, setContent] = useState(initialData?.content ?? '')
+  const [published, setPublished] = useState(initialData?.published ?? false)
+  const router = useRouter()
   const isEditing = !!initialData
 
-  // Wrap the server action to satisfy void return type
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
+    setError('')
     const formData = new FormData(e.currentTarget)
-    savePost(formData).catch(console.error)
+    formData.set('content', content)
+    formData.set('published', published ? 'on' : 'off')
+    const result = await savePost(formData)
+    if (result.error) {
+      setError(result.error)
+    } else {
+      router.push('/my-posts')
+      router.refresh()
+    }
   }
 
   return (
@@ -58,14 +71,15 @@ export function PostEditor({ initialData }: Props) {
             <input
               type="checkbox"
               name="published"
-              defaultChecked={initialData?.published ?? false}
+              checked={published}
+              onChange={(e) => setPublished(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="relative w-9 h-5 bg-gray-300 peer-checked:bg-primary rounded-full transition-colors peer-focus:ring-2 peer-focus:ring-ring">
-              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4`} />
+            <div className={`relative w-9 h-5 rounded-full transition-colors ${published ? 'bg-primary' : 'bg-gray-300'}`}>
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${published ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
             <span className="text-xs text-muted-foreground">
-              {initialData?.published ? '已发布' : '草稿'}
+              {published ? '已发布' : '草稿'}
             </span>
           </label>
         </div>
@@ -88,10 +102,10 @@ export function PostEditor({ initialData }: Props) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
               <textarea
                 id="content"
-                name="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
                 required
-                defaultValue={initialData?.content ?? ''}
-                placeholder="# 开始写作...&#10;&#10;支持 Markdown 语法:&#10;- **粗体**、*斜体*&#10;- \`代码\`&#10;- ```代码块```"
+                placeholder="# 开始写作...\n支持 Markdown 语法"
                 className="font-mono text-sm p-4 h-[400px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <div className="border rounded-lg overflow-auto p-4 h-[400px] bg-white">
@@ -100,34 +114,17 @@ export function PostEditor({ initialData }: Props) {
             </div>
           ) : (
             <div className="border rounded-lg p-6 overflow-auto h-[400px] bg-white">
-              <LiveContentPreview />
+              <MarkdownPreview content={content || '暂无内容'} />
             </div>
           )}
         </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <SubmitButton isEditing={isEditing} />
       </form>
     </div>
   )
-}
-
-function LiveContentPreview() {
-  const [content, setContent] = useState('# 预览你的文章\n\n开始写作吧！')
-
-  useEffect(() => {
-    const textarea = document.getElementById('content') as HTMLTextAreaElement | null
-    if (textarea) setContent(textarea.value || '# 预览你的文章\n\n开始写作吧！')
-  }, [])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const textarea = document.getElementById('content') as HTMLTextAreaElement | null
-      if (textarea) setContent(textarea.value)
-    }, 500)
-    return () => clearInterval(interval)
-  }, [])
-
-  return content.trim() ? <MarkdownPreview content={content} /> : null
 }
 
 function SubmitButton({ isEditing }: { isEditing: boolean }) {

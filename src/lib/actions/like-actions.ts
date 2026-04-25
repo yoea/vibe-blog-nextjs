@@ -8,6 +8,8 @@ export async function toggleLike(postId: string): Promise<{ error?: string }> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '未登录' }
 
+  const { data: post } = await supabase.from('posts').select('slug').eq('id', postId).single()
+
   // Check if already liked
   const { data: existing } = await supabase
     .from('post_likes')
@@ -17,19 +19,17 @@ export async function toggleLike(postId: string): Promise<{ error?: string }> {
     .single()
 
   if (existing) {
-    // Unlike
     await supabase.from('post_likes')
       .delete()
       .eq('post_id', postId)
       .eq('user_id', user.id)
   } else {
-    // Like
     await supabase.from('post_likes').insert({
       post_id: postId,
       user_id: user.id,
     })
   }
 
-  revalidatePath(`/posts/[${postId}]`)
+  if (post) revalidatePath(`/posts/${post.slug}`)
   return {}
 }

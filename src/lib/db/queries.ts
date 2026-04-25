@@ -11,7 +11,6 @@ export async function getPublishedPosts(page = 1, limit = 10) {
     .select(
       `
       id, author_id, title, slug, content, excerpt, published, created_at, updated_at,
-      author:author_id(email),
       like_count:post_likes(count),
       comment_count:post_comments(count)
     `,
@@ -25,6 +24,7 @@ export async function getPublishedPosts(page = 1, limit = 10) {
 
   const result = data.map((item: any) => ({
     ...item,
+    author: { email: null },
     like_count: item.like_count?.[0]?.count ?? 0,
     comment_count: item.comment_count?.[0]?.count ?? 0,
   })) as unknown as PostWithAuthor[]
@@ -36,15 +36,13 @@ export async function getPostBySlug(slug: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: post, error } = await supabase
+  const { data: post, error: postError } = await supabase
     .from('posts')
-    .select(`
-      id, author_id, title, slug, content, excerpt, published, created_at, updated_at,
-      author:author_id(email)
-    `)
+    .select('*')
     .eq('slug', slug)
     .single()
 
+  if (postError) return { data: null, error: postError.message }
   if (!post) return { data: null, error: '文章不存在' }
 
   // Allow viewing own draft posts
@@ -63,7 +61,7 @@ export async function getPostBySlug(slug: string) {
         .select('id')
         .eq('post_id', post.id)
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
     : { data: null }
 
   const { count: commentCount } = await supabase
@@ -73,6 +71,7 @@ export async function getPostBySlug(slug: string) {
 
   const result = {
     ...post,
+    author: { email: null },
     like_count: likeCount ?? 0,
     comment_count: commentCount ?? 0,
     is_liked_by_current_user: !!userLike,
@@ -87,14 +86,13 @@ export async function getCommentsForPost(postId: string) {
     .from('post_comments')
     .select(
       `
-      id, post_id, author_id, content, created_at, updated_at,
-      author:author_id(email)
+      id, post_id, author_id, content, created_at, updated_at
     `)
     .eq('post_id', postId)
     .order('created_at', { ascending: true })
 
   if (error) return { data: [], error: error.message }
-  const result = data as unknown as CommentWithAuthor[]
+  const result = data.map((item: any) => ({ ...item, author: { email: null } })) as unknown as CommentWithAuthor[]
   return { data: result, error: null }
 }
 

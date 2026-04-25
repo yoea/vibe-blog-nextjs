@@ -3,21 +3,28 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function createComment(postId: string, content: string): Promise<{ error?: string }> {
+async function getPostSlug(supabase: any, postId: string): Promise<string | null> {
+  const { data } = await supabase.from('posts').select('slug').eq('id', postId).single()
+  return data?.slug ?? null
+}
+
+export async function createComment(postId: string, content: string): Promise<{ error?: string; data?: any }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '未登录' }
   if (!content.trim()) return { error: '评论内容不能为空' }
 
-  const { error } = await supabase.from('post_comments').insert({
-    post_id: postId,
-    author_id: user.id,
-    content: content.trim(),
-  })
+  const { data: comment, error } = await supabase.from('post_comments')
+    .insert({
+      post_id: postId,
+      author_id: user.id,
+      content: content.trim(),
+    })
+    .select('*')
+    .single()
 
   if (error) return { error: error.message }
-  revalidatePath(`/posts/[${postId}]`)
-  return {}
+  return { data: { ...comment, author: { email: user.email } } }
 }
 
 export async function deleteComment(commentId: string, postId: string): Promise<{ error?: string }> {
@@ -31,6 +38,7 @@ export async function deleteComment(commentId: string, postId: string): Promise<
     .eq('author_id', user.id)
 
   if (error) return { error: error.message }
-  revalidatePath(`/posts/[${postId}]`)
+  const slug = await getPostSlug(supabase, postId)
+  if (slug) revalidatePath(`/posts/${slug}`)
   return {}
 }

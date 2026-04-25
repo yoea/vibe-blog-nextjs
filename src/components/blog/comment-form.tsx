@@ -1,26 +1,33 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { createComment } from '@/lib/actions/comment-actions'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import type { CommentWithAuthor } from '@/lib/db/types'
 
-export function CommentForm({ postId }: { postId: string }) {
+export function CommentForm({
+  postId,
+  onSubmit,
+}: {
+  postId: string
+  onSubmit: (content: string) => Promise<boolean>
+}) {
   const [comment, setComment] = useState('')
-  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!comment.trim()) return
 
-    startTransition(async () => {
-      const result = await createComment(postId, comment)
-      if (!result.error) {
-        setComment('')
-        window.location.reload()
-      }
-    })
+    setSubmitting(true)
+    setError('')
+    const success = await onSubmit(comment.trim())
+    if (success) {
+      setComment('')
+    } else {
+      setError('评论失败，请重试')
+    }
+    setSubmitting(false)
   }
 
   return (
@@ -31,8 +38,9 @@ export function CommentForm({ postId }: { postId: string }) {
         placeholder="写下你的评论..."
         rows={3}
       />
-      <Button type="submit" disabled={isPending || !comment.trim()} size="sm">
-        {isPending ? '提交中...' : '发表评论'}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={submitting || !comment.trim()} size="sm">
+        {submitting ? '提交中...' : '发表评论'}
       </Button>
     </form>
   )

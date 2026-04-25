@@ -24,7 +24,11 @@ export function LikeButton({
     setLiked(newLiked)
 
     startTransition(async () => {
-      await toggleLike(postId)
+      const result = await toggleLike(postId)
+      if (result.error) {
+        setLiked(!newLiked)
+        setCount((c) => (!newLiked ? c + 1 : c - 1))
+      }
     })
   }
 

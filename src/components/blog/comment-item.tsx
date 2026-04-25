@@ -1,30 +1,81 @@
 'use client'
 
+import { useState } from 'react'
 import { deleteComment } from '@/lib/actions/comment-actions'
 import type { CommentWithAuthor } from '@/lib/db/types'
 import { Trash2 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
-export function CommentItem({ comment }: { comment: CommentWithAuthor }) {
-  async function handleDelete(id: string, e: React.MouseEvent) {
-    e.preventDefault()
-    if (!confirm('确定删除这条评论？')) return
+export function CommentItem({
+  comment,
+  onDelete,
+}: {
+  comment: CommentWithAuthor
+  onDelete: (commentId: string) => void
+}) {
+  const [deleting, setDeleting] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  async function handleDelete() {
+    setDeleting(true)
     try {
-      await deleteComment(id, comment.post_id)
-      window.location.reload()
-    } catch {}
+      const result = await deleteComment(comment.id, comment.post_id)
+      if (result.error) {
+        alert(result.error)
+        setDeleting(false)
+      } else {
+        onDelete(comment.id)
+      }
+    } catch {
+      setDeleting(false)
+    }
   }
 
   return (
-    <div className="flex gap-3 border-b border-gray-100 pb-3 last:border-0">
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-medium">
-            {comment.author?.email?.split('@')[0] ?? '匿名用户'}
-          </span>
-          <span>{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>
+    <>
+      <div className="flex gap-3 border-b border-gray-100 pb-3 last:border-0">
+        <div className="flex-1 space-y-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="font-medium">
+              {comment.author?.email?.split('@')[0] ?? '匿名用户'}
+            </span>
+            <span>{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>
+          </div>
+          <p className="text-sm">{comment.content}</p>
         </div>
-        <p className="text-sm">{comment.content}</p>
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={deleting}
+          className="text-muted-foreground hover:text-destructive transition-colors self-start shrink-0"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除评论</DialogTitle>
+            <DialogDescription>确定删除这条评论？此操作不可撤销。</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={deleting}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? '删除中...' : '删除'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
