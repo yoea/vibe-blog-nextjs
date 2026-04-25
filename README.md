@@ -57,7 +57,7 @@ npm run dev
 ### Step 1: 拉取代码并安装依赖
 
 ```bash
-git clone <你的仓库地址> /path/to/app
+git clone git@git.ewing.top:yoea/vibe_blog_demo.git /path/to/app
 cd /path/to/app
 npm install
 ```
