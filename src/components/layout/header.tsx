@@ -41,7 +41,7 @@ export function Header() {
         <nav className="flex items-center gap-2">
           <Link href="/" className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
             <FileText className="h-4 w-4 inline mr-1" />
-            文章
+            首页
           </Link>
           {user && (
             <>

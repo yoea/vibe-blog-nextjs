@@ -13,7 +13,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-muted-foreground">
           还没有账号？{' '}
           <Link href="/register" className="text-primary hover:underline">
-            注册
+            立即注册
           </Link>
         </p>
       </div>
