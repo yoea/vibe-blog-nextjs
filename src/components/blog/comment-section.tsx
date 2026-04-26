@@ -41,8 +41,8 @@ export function CommentSection({
   } = useThreadedList<CommentWithAuthor>({
     initialItems: initialComments,
     initialTotal,
-    onSubmit: async (content, parentId) => {
-      const result = await createComment(postId, content, parentId)
+    onSubmit: async (content, parentId, guestName) => {
+      const result = await createComment(postId, content, parentId, guestName)
       if (result.error) return { success: false, error: result.error }
       return { success: true, data: result.data }
     },
