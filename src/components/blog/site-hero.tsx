@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react'
 import { SiteStats } from './site-stats'
 import { getSiteViewsCount, getSiteLikesCount, getTotalPostsCount } from '@/lib/db/queries'
+import { createClient } from '@/lib/supabase/server'
 
 export async function SiteHero() {
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
@@ -8,6 +9,8 @@ export async function SiteHero() {
   const { count: viewsCount } = await getSiteViewsCount()
   const { count: likesCount } = await getSiteLikesCount()
   const { count: totalPosts } = await getTotalPostsCount()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   return (
     <section className="text-center py-10 space-y-3 mb-8 md:mb-0">
@@ -22,6 +25,12 @@ export async function SiteHero() {
           <span>{totalPosts}</span>
         </div>
       </div>
+
+      {!user && (
+        <p className="text-[11px] text-muted-foreground/60 max-w-md mx-auto leading-relaxed">
+          当前未登录，但您可以浏览文章，以及点赞、评论、给作者留言和打赏。
+        </p>
+      )}
     </section>
   )
 }
