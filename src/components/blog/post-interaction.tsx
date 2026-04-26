@@ -48,7 +48,7 @@ export function PostInteraction({
         currentUserId={currentUserId}
         initialComments={initialComments}
         initialTotal={initialTotal}
-        onCountChange={setCommentCount}
+        onCountChange={(delta) => setCommentCount(c => c + delta)}
         focusSignal={focusSignal}
       />
     </>

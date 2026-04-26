@@ -35,10 +35,6 @@ export function useThreadedList<T extends ThreadedItem>({
 
   const hasMore = items.length < total
 
-  function computeTotal(list: T[]): number {
-    return list.reduce((sum, item) => sum + 1 + (item.replies?.length ?? 0), 0)
-  }
-
   async function handleSubmit(content: string, parentId?: string) {
     const result = await onSubmit(content, parentId)
     if (!result.error && result.data) {
@@ -58,14 +54,14 @@ export function useThreadedList<T extends ThreadedItem>({
                   ? { ...item, replies: [...(item.replies ?? []), newItem] }
                   : item
               )
-          if (onCountChange) onCountChange(computeTotal(next as T[]))
+          if (onCountChange) onCountChange(1)
           return next
         })
       } else {
         setItems((prev) => {
           const next = [newItem, ...prev]
           setTotal((c) => c + 1)
-          if (onCountChange) onCountChange(computeTotal(next as T[]))
+          if (onCountChange) onCountChange(1)
           return next
         })
       }
@@ -85,7 +81,7 @@ export function useThreadedList<T extends ThreadedItem>({
               ...item,
               replies: item.replies?.filter((r) => r.id !== id),
             }))
-        if (onCountChange) onCountChange(computeTotal(next as T[]))
+        if (onCountChange) onCountChange(-1)
         return next
       })
       setTotal((c) => c - 1)
