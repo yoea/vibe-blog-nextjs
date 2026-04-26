@@ -350,12 +350,21 @@ export async function getPostsByAuthor(authorId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('posts')
-    .select('*')
+    .select(`
+      *,
+      like_count:post_likes(count),
+      comment_count:post_comments(count)
+    `)
     .eq('author_id', authorId)
     .order('created_at', { ascending: false })
 
   if (error) return { data: [], error: error.message }
-  return { data, error: null }
+  const mapped = (data ?? []).map((p: any) => ({
+    ...p,
+    like_count: p.like_count?.[0]?.count ?? 0,
+    comment_count: p.comment_count?.[0]?.count ?? 0,
+  }))
+  return { data: mapped, error: null }
 }
 
 export async function getUserSettings() {

@@ -1,40 +1,144 @@
-import Link from 'next/link'
-import { Calendar, Heart, MessageSquare } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import type { PostWithAuthor } from '@/lib/db/types'
+'use client'
 
-export function PostCard({ post }: { post: PostWithAuthor }) {
+import { useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Calendar, Heart, MessageSquare, Edit2, Trash2, Globe, Lock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { deletePost } from '@/lib/actions/post-actions'
+
+interface PostCardData {
+  id: string
+  title: string
+  slug: string
+  published: boolean
+  created_at: string
+  excerpt?: string | null
+  like_count?: number
+  comment_count?: number
+  author?: { email?: string | null; name?: string | null } | null
+}
+
+export function PostCard({ post, showActions }: { post: PostCardData; showActions?: boolean }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      const result = await deletePost(post.id)
+      if (!result.error) {
+        router.refresh()
+      }
+    })
+  }
+
+  const statusIcon = post.published
+    ? <Globe className="h-3 w-3" />
+    : <Lock className="h-3 w-3" />
+
+  const metaRow = (
+    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <span className="flex items-center gap-1">
+        <Calendar className="h-3 w-3" />
+        {new Date(post.created_at).toLocaleDateString('zh-CN')}
+      </span>
+      <span className="flex items-center gap-1">
+        <Heart className="h-3 w-3" />
+        {post.like_count ?? 0}
+      </span>
+      <span className="flex items-center gap-1">
+        <MessageSquare className="h-3 w-3" />
+        {post.comment_count ?? 0}
+      </span>
+      {post.author?.name && (
+        <span>{post.author.name}</span>
+      )}
+    </div>
+  )
+
+  // "My Posts" layout: border div + edit/delete buttons
+  if (showActions) {
+    return (
+      <>
+        <div className="grid grid-cols-[1fr_auto] gap-3 border rounded-lg p-4 bg-card">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Link
+                href={`/posts/${post.slug}`}
+                className="truncate font-semibold text-lg hover:text-primary transition-colors block"
+              >
+                {post.title}
+              </Link>
+              <span className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded ${
+                post.published
+                  ? 'text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-950'
+                  : 'text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-950'
+              }`}>
+                {statusIcon}
+                {post.published ? '公开' : '私密'}
+              </span>
+            </div>
+            {post.excerpt && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-1">{post.excerpt}</p>
+            )}
+            {metaRow}
+          </div>
+          <div className="flex items-center gap-2 shrink-0 ml-3">
+            <Link href={`/posts-edit/${post.slug}`}>
+              <Button variant="outline" size="sm">
+                <Edit2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline ml-1">编辑</span>
+              </Button>
+            </Link>
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-red-50" onClick={() => setShowConfirm(true)}>
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline ml-1">删除</span>
+            </Button>
+          </div>
+        </div>
+
+        <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>删除文章</DialogTitle>
+              <DialogDescription>确定删除「{post.title}」？此操作不可撤销。</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isPending}>
+                取消
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+                {isPending ? '删除中...' : '删除'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
+
+  // Public list layout: Card, entire card is a link (all posts are published here)
   return (
     <Card className="hover:shadow-md transition-shadow">
       <Link href={`/posts/${post.slug}`} className="block">
         <CardHeader className="pb-2">
-          <h2 className="text-xl font-semibold leading-tight line-clamp-2">{post.title}</h2>
+          <h2 className="text-xl font-semibold leading-tight truncate min-w-0">{post.title}</h2>
         </CardHeader>
         <CardContent className="space-y-3">
           {post.excerpt && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {post.excerpt}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
           )}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {new Date(post.created_at).toLocaleDateString('zh-CN')}
-            </span>
-            <span className="flex items-center gap-1">
-              <Heart className="h-3 w-3" />
-              {post.like_count}
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              {post.comment_count}
-            </span>
-            {post.author && (
-              <span className="flex items-center gap-1">
-                {post.author.name ?? post.author.email?.split('@')[0] ?? ''}
-              </span>
-            )}
-          </div>
+          {metaRow}
         </CardContent>
       </Link>
     </Card>

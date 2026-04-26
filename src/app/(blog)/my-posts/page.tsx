@@ -1,6 +1,6 @@
 import { getPostsByAuthor } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
-import { PostCard } from '@/components/blog/my-post-card'
+import { PostCard } from '@/components/blog/post-card'
 import Link from 'next/link'
 
 export default async function MyPostsPage() {
@@ -32,7 +32,7 @@ export default async function MyPostsPage() {
       ) : (
         <div className="grid gap-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} showActions />
           ))}
         </div>
       )}
