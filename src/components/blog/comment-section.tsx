@@ -87,7 +87,7 @@ export function CommentSection({
                 onDelete={handleDelete}
                 deleteTitle="删除评论"
                 deleteDescription="确定删除这条评论？此操作不可撤销。"
-                canDelete={currentUserId && (currentUserId === comment.author_id || currentUserId === postAuthorId)}
+                canDelete={!!currentUserId && (currentUserId === comment.author_id || currentUserId === postAuthorId)}
               >
                 <LikeButton comment={comment} currentUserId={currentUserId} />
               </ThreadedItemRenderer>
@@ -114,7 +114,6 @@ function LikeButton({ comment, currentUserId }: { comment: CommentWithAuthor; cu
 
   async function handleLike(e: React.MouseEvent) {
     e.stopPropagation()
-    if (!currentUserId) return
     setLikeLoading(true)
     const result = await toggleCommentLike(comment.id)
     if (!result.error) {
@@ -127,7 +126,7 @@ function LikeButton({ comment, currentUserId }: { comment: CommentWithAuthor; cu
   return (
     <button
       onClick={handleLike}
-      disabled={!currentUserId || likeLoading}
+      disabled={likeLoading}
       className={`flex items-center gap-1 text-xs transition-colors ${
         liked ? 'text-red-500' : 'text-muted-foreground hover:text-red-400'
       }`}

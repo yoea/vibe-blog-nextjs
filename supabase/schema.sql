@@ -44,9 +44,11 @@ create table if not exists post_comments (
 create table if not exists comment_likes (
   id uuid default gen_random_uuid() primary key,
   comment_id uuid references post_comments(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade,
+  ip varchar(45),
   created_at timestamptz default now(),
-  unique(comment_id, user_id)
+  unique(comment_id, user_id),
+  unique(comment_id, ip)
 );
 
 -- User settings table
@@ -187,10 +189,24 @@ create policy "comment_likes_select"
   on comment_likes for select using (true);
 
 create policy "comment_likes_insert"
-  on comment_likes for insert with check (auth.uid() = user_id);
+  on comment_likes for insert with check (
+    auth.role() = 'authenticated' and auth.uid() = user_id
+  );
 
 create policy "comment_likes_delete"
-  on comment_likes for delete using (auth.uid() = user_id);
+  on comment_likes for delete using (
+    auth.role() = 'authenticated' and auth.uid() = user_id
+  );
+
+create policy "comment_likes_anon_insert"
+  on comment_likes for insert with check (
+    auth.role() = 'anon' and ip is not null
+  );
+
+create policy "comment_likes_anon_delete"
+  on comment_likes for delete using (
+    auth.role() = 'anon' and ip is not null
+  );
 
 -- User Settings RLS
 alter table user_settings enable row level security;

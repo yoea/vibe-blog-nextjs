@@ -184,13 +184,27 @@ export async function getCommentsForPost(postId: string, options?: { page?: numb
       if (commentIds.length === 0) return
       const { data: likes } = await supabase
         .from('comment_likes')
-        .select('comment_id, user_id')
+        .select('comment_id, user_id, ip')
         .in('comment_id', commentIds)
       if (likes) {
         for (const l of likes) {
           likeCountMap.set(l.comment_id, (likeCountMap.get(l.comment_id) ?? 0) + 1)
           if (user && l.user_id === user.id) {
             userLikedMap.set(l.comment_id, true)
+          }
+        }
+        // For anonymous users, check by IP
+        if (!user) {
+          const h = await headers()
+          const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim()
+            ?? h.get('x-real-ip')
+            ?? null
+          if (ip && ip !== 'unknown') {
+            for (const l of likes) {
+              if (l.ip === ip) {
+                userLikedMap.set(l.comment_id, true)
+              }
+            }
           }
         }
       }

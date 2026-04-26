@@ -134,14 +134,43 @@ export async function deleteComment(commentId: string, postId: string): Promise<
 export async function toggleCommentLike(commentId: string): Promise<ActionResult & { liked?: boolean }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '请先登录' }
 
-  // Check if already liked
+  if (user) {
+    const { data: existing } = await supabase
+      .from('comment_likes')
+      .select('id')
+      .eq('comment_id', commentId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (existing) {
+      const { error } = await supabase
+        .from('comment_likes')
+        .delete()
+        .eq('id', existing.id)
+      if (error) return { error: error.message }
+      return { liked: false }
+    } else {
+      const { error } = await supabase
+        .from('comment_likes')
+        .insert({ comment_id: commentId, user_id: user.id })
+      if (error) return { error: error.message }
+      return { liked: true }
+    }
+  }
+
+  // Guest: track by IP
+  const h = await headers()
+  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? h.get('x-real-ip')
+    ?? null
+  if (!ip || ip === 'unknown') return { error: '无法获取IP' }
+
   const { data: existing } = await supabase
     .from('comment_likes')
     .select('id')
     .eq('comment_id', commentId)
-    .eq('user_id', user.id)
+    .eq('ip', ip)
     .maybeSingle()
 
   if (existing) {
@@ -154,7 +183,7 @@ export async function toggleCommentLike(commentId: string): Promise<ActionResult
   } else {
     const { error } = await supabase
       .from('comment_likes')
-      .insert({ comment_id: commentId, user_id: user.id })
+      .insert({ comment_id: commentId, ip })
     if (error) return { error: error.message }
     return { liked: true }
   }
