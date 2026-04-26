@@ -1,6 +1,5 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { SiteHero } from '@/components/blog/site-hero'
 import { DonateButton } from '@/components/donate-button'
 import { Home, Users, FileText, PenSquare, LogIn, UserPlus, Settings, Shield, Scale, Map, Heart } from 'lucide-react'
 
@@ -50,7 +49,7 @@ const categories = [
 export default async function SitemapPage() {
   return (
     <div className="space-y-6">
-      <SiteHero />
+      <h1 className="text-3xl font-bold">网站地图</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {categories.map((category) => (
