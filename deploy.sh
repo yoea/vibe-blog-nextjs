@@ -17,6 +17,8 @@ git stash --include-untracked || true
 git pull --rebase || git pull
 echo "代码拉取完成"
 
+chmod +x deploy.sh
+
 # 3. 安装依赖
 echo "安装依赖..."
 npm install
