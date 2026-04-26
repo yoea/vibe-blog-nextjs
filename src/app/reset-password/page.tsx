@@ -17,13 +17,19 @@ export default function ResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [validLink, setValidLink] = useState<boolean | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     const checkSession = async () => {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      setValidLink(!!session)
+      // Only allow access if session was established via password recovery flow
+      const isRecovery = (session as any)?.amr?.some((a: { method: string }) => a.method === 'recovery')
+      setValidLink(!!isRecovery)
+      if (isRecovery && session?.user?.email) {
+        setUserEmail(session.user.email)
+      }
     }
     checkSession()
   }, [])
@@ -60,7 +66,9 @@ export default function ResetPasswordPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('密码已重置，请重新登录')
+      toast.success('密码已重置')
+      // Force sign out and redirect to login
+      await supabase.auth.signOut()
       router.push('/login')
     }
   }
@@ -82,10 +90,10 @@ export default function ResetPasswordPage() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 max-w-sm">
           <p className="font-semibold flex items-center gap-1.5">
             <AlertCircle className="h-4 w-4 text-amber-500" />
-            链接无效或已过期
+            该重置密码链接无效或已过期
           </p>
           <p className="text-sm text-amber-800">
-            该密码重置链接已失效。请重新申请重置密码，或直接登录账号。
+            邮件内的重置密码链接只能使用一次，请重新申请重置密码，或直接登录账号。
           </p>
           <div className="flex gap-2 mt-3">
             <Button variant="outline" onClick={() => router.push('/login')}>去登录</Button>
@@ -100,7 +108,8 @@ export default function ResetPasswordPage() {
     <div className="space-y-6 max-w-sm">
       <div>
         <h1 className="text-3xl font-bold">重置密码</h1>
-        <p className="text-muted-foreground mt-1">请输入你的新密码</p>
+        <p className="text-muted-foreground mt-1">账号：{userEmail}</p>
+        <p className="text-muted-foreground text-sm">请输入你的新密码</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
