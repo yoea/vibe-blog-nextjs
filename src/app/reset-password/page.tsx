@@ -90,13 +90,13 @@ export default function ResetPasswordPage() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 max-w-sm">
           <p className="font-semibold flex items-center gap-1.5">
             <AlertCircle className="h-4 w-4 text-amber-500" />
-            该重置密码链接无效或已过期
+            抱歉，该重置密码链接无效或已过期
           </p>
           <p className="text-sm text-amber-800">
             邮件内的重置密码链接只能使用一次，请重新申请重置密码，或直接登录账号。
           </p>
           <div className="flex gap-2 mt-3">
-            <Button variant="outline" onClick={() => router.push('/login')}>去登录</Button>
+            <Button variant="outline" onClick={() => router.push('/login')}>立即登录</Button>
             <Button variant="outline" onClick={() => router.push('/settings')}>重新申请</Button>
           </div>
         </div>

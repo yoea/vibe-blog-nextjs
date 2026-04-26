@@ -70,11 +70,14 @@ export function SettingsForm({ user, displayName }: Props) {
 
   const handleResetPassword = async () => {
     setResettingPassword(true)
+    const toastId = toast.loading('发送密码重置邮件中...')
     const res = await resetPasswordForEmail()
     setResettingPassword(false)
+    toast.dismiss(toastId)
     if (res.error) {
       toast.error(res.error)
     } else {
+      setShowResetConfirm(false)
       toast.success('密码重置邮件已发送，请检查邮箱')
     }
   }
@@ -150,7 +153,7 @@ export function SettingsForm({ user, displayName }: Props) {
         <CardContent className="space-y-4">
             <div>
             <Button variant="outline" onClick={() => setShowResetConfirm(true)} className="w-full sm:w-auto">重置密码</Button>
-            <p className="text-xs text-muted-foreground mt-1">发送密码重置邮件到你的注册邮箱，请在邮件中完成新密码的设置</p>
+            <p className="text-xs text-muted-foreground mt-1">重置方式将发送至注册邮箱，按指示重置密码。</p>
             </div>
 
             <div>

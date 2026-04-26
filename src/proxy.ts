@@ -31,7 +31,13 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path)
   )
   if (isAuthPath && user) {
-    return NextResponse.redirect(new URL('/my-posts', request.url))
+    const redirectUrl = new URL('/my-posts', request.url)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    // Forward cookies from updateSession response to ensure session persists
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   return response
