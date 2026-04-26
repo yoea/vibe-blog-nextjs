@@ -21,7 +21,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const { data: post } = await getPostBySlug(slug)
   if (!post) return { title: '文章不存在' }
-  return { title: post.title }
+  return {
+    title: post.title,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt ?? '',
+      type: 'article',
+      publishedTime: post.created_at,
+      modifiedTime: post.updated_at,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${slug}`,
+      images: process.env.NEXT_PUBLIC_SITE_URL
+        ? [{ url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.svg`, width: 120, height: 120 }]
+        : undefined,
+    },
+  }
 }
 
 export default async function PostPage({ params }: PageProps) {

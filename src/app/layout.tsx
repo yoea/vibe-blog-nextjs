@@ -21,14 +21,24 @@ const geistMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
+  const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION ?? 'A blog built with Supabase and Next.js'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   return {
     title: {
       default: siteTitle,
       template: `%s - ${siteTitle}`,
     },
-    description: 'A blog built with Supabase and Next.js',
+    description: siteDescription,
     icons: {
       icon: '/logo.svg',
+    },
+    openGraph: {
+      title: siteTitle,
+      description: siteDescription,
+      type: 'website',
+      siteName: siteTitle,
+      url: siteUrl,
+      images: siteUrl ? [{ url: `${siteUrl}/logo.svg`, width: 120, height: 120 }] : undefined,
     },
   }
 }
