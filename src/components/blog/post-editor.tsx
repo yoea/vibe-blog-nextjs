@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { MarkdownPreview } from '@/components/shared/markdown-preview'
 import { Separator } from '@/components/ui/separator'
 import { savePost } from '@/lib/actions/post-actions'
+import { useLocalDraft } from '@/lib/hooks/use-local-draft'
 import { toast } from 'sonner'
 import type { PostWithAuthor } from '@/lib/db/types'
 
@@ -33,6 +34,23 @@ export function PostEditor({ initialData }: Props) {
   const lastSummaryTime = useRef(0)
   const router = useRouter()
   const isEditing = !!initialData
+
+  const draftKey = isEditing && initialData ? `post_draft_${initialData.id}` : null
+  const { hasNewerDraft, timeAgo, save, clear, restore, discard } = useLocalDraft(draftKey, initialData)
+  const [showRecovery, setShowRecovery] = useState(hasNewerDraft)
+
+  // 新建文章：静默恢复本地草稿
+  useEffect(() => {
+    if (!isEditing) {
+      const restored = restore()
+      if (restored) {
+        setTitle(restored.title ?? '')
+        setContent(restored.content ?? '')
+        setExcerpt(restored.excerpt ?? '')
+        if (restored.published !== undefined) setPublished(restored.published)
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetch('/api/generate-summary')
@@ -102,6 +120,7 @@ export function PostEditor({ initialData }: Props) {
     if (result.error) {
       setError(result.error)
     } else {
+      clear()
       router.push('/my-posts')
       router.refresh()
     }
@@ -109,6 +128,36 @@ export function PostEditor({ initialData }: Props) {
 
   return (
     <div className="space-y-6">
+      {isEditing && showRecovery && hasNewerDraft && (
+        <div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span>检测到本地有未保存的草稿（{timeAgo}），是否恢复？</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const restored = restore()
+                if (restored) {
+                  setTitle(restored.title ?? '')
+                  setContent(restored.content ?? '')
+                  setExcerpt(restored.excerpt ?? '')
+                  if (restored.published !== undefined) setPublished(restored.published)
+                }
+                setShowRecovery(false)
+              }}
+              className="rounded-md bg-amber-200 px-3 py-1 font-medium hover:bg-amber-300 transition-colors cursor-pointer"
+            >
+              恢复草稿
+            </button>
+            <button
+              type="button"
+              onClick={() => { discard(); setShowRecovery(false) }}
+              className="rounded-md px-3 py-1 text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+            >
+              忽略
+            </button>
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} method="post" className="space-y-4" noValidate>
         {isEditing && <input type="hidden" name="_mode" value="update" />}
         {isEditing && <input type="hidden" name="_id" value={initialData.id} />}
@@ -120,6 +169,7 @@ export function PostEditor({ initialData }: Props) {
             name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => save({ title, content, excerpt, published })}
             placeholder="文章标题"
             className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
@@ -152,6 +202,7 @@ export function PostEditor({ initialData }: Props) {
               id="excerpt"
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value.slice(0, SUMMARY_MAX_LENGTH))}
+              onBlur={() => save({ title, content, excerpt, published })}
               placeholder="一句话概括文章..."
               maxLength={SUMMARY_MAX_LENGTH}
               rows={2}
@@ -170,7 +221,10 @@ export function PostEditor({ initialData }: Props) {
             <span className="text-sm text-muted-foreground">源码</span>
             <button
               type="button"
-              onClick={() => setTab(tab === 'edit' ? 'preview' : 'edit')}
+              onClick={() => {
+                save({ title, content, excerpt, published })
+                setTab(tab === 'edit' ? 'preview' : 'edit')
+              }}
               className={`relative w-11 h-6 rounded-full transition-colors ${
                 tab === 'preview' ? 'bg-primary' : 'bg-gray-300'
               }`}
@@ -191,6 +245,7 @@ export function PostEditor({ initialData }: Props) {
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
+                onBlur={() => save({ title, content, excerpt, published })}
                 maxLength={CONTENT_MAX_LENGTH}
                 placeholder="# 开始写作...\n支持 Markdown 语法"
                 className={`font-mono text-base md:text-sm p-4 h-[300px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 ${
@@ -271,6 +326,7 @@ export function PostEditor({ initialData }: Props) {
             autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
+            onBlur={() => save({ title, content, excerpt, published })}
             maxLength={CONTENT_MAX_LENGTH}
             placeholder="# 开始写作...\n支持 Markdown 语法"
             className={`flex-1 font-mono text-base md:text-lg p-6 w-full resize-none bg-transparent focus:outline-none border-none ${
