@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHero } from '@/components/blog/site-hero'
-import { Home, Users, FileText, PenSquare, LogIn, UserPlus, Settings, Shield, Scale, Map } from 'lucide-react'
+import { DonateButton } from '@/components/donate-button'
+import { Home, Users, FileText, PenSquare, LogIn, UserPlus, Settings, Shield, Scale, Map, Heart } from 'lucide-react'
 
 export const metadata = {
   title: '网站地图',
@@ -38,6 +39,12 @@ const categories = [
       { href: '/legal', title: '法律信息', icon: Scale },
     ],
   },
+  {
+    title: '支持',
+    items: [
+      { href: null, title: '给网站作者充电', icon: Heart },
+    ],
+  },
 ]
 
 export default async function SitemapPage() {
@@ -52,9 +59,21 @@ export default async function SitemapPage() {
             <ul className="space-y-1">
               {category.items.map((item) => {
                 const Icon = item.icon
+                if (item.title === '给网站作者充电') {
+                  return (
+                    <li key={item.title}>
+                      <DonateButton>
+                        <button className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline py-1">
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {item.title}
+                        </button>
+                      </DonateButton>
+                    </li>
+                  )
+                }
                 return (
                   <li key={item.href}>
-                    <Link href={item.href} className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline py-1">
+                    <Link href={item.href!} className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline py-1">
                       <Icon className="h-4 w-4 shrink-0" />
                       {item.title}
                     </Link>

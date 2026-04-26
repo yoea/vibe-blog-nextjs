@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request)
 
   // Protected routes require authentication
-  const protectedPaths = ['/posts/new', '/my-posts', '/settings']
+  const protectedPaths = ['/posts/new', '/posts-edit', '/my-posts', '/settings']
   const isProtected = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )

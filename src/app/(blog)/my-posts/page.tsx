@@ -7,6 +7,7 @@ import { Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { formatDaysAgo } from '@/lib/utils/time'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,7 +29,7 @@ export default async function MyPostsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) redirect('/login?redirect=/my-posts')
 
   // Fetch display name
   const { data: userSettings } = await supabase

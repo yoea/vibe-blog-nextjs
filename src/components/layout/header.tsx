@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LogIn, FileText, Settings, Users, Menu, X, Sun, Moon, Monitor } from 'lucide-react'
+import { LogIn, FileText, Settings, Users, Menu, X, Sun, Moon, Monitor, Home, User } from 'lucide-react'
 import { useTheme, type ThemeMode } from '@/components/layout/theme-provider'
 
 export function Header({ siteTitle }: { siteTitle: string }) {
@@ -37,7 +37,7 @@ export function Header({ siteTitle }: { siteTitle: string }) {
   const navLinks = (
     <>
       <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors">
-        <FileText className="h-4 w-4" />
+        <Home className="h-4 w-4" />
         <span>首页</span>
       </Link>
       <Link href="/author" onClick={() => setMenuOpen(false)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors">
@@ -47,7 +47,7 @@ export function Header({ siteTitle }: { siteTitle: string }) {
       {user ? (
         <>
           <Link href="/my-posts" onClick={() => setMenuOpen(false)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors">
-            <FileText className="h-4 w-4" />
+            <User className="h-4 w-4" />
             <span>我的</span>
           </Link>
           <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors">

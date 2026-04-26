@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
-export function LoginForm() {
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(true)
   const redirectedRef = useRef(false)
@@ -16,12 +16,12 @@ export function LoginForm() {
       if (user && !redirectedRef.current) {
         redirectedRef.current = true
         toast.info('已登录，正在跳转')
-        window.location.href = '/my-posts'
+        window.location.href = redirectTo || '/my-posts'
       } else {
         setChecking(false)
       }
     })
-  }, [])
+  }, [redirectTo])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -37,7 +37,7 @@ export function LoginForm() {
       toast.error(error.message)
     } else {
       toast.success('登录成功')
-      window.location.href = '/'
+      window.location.href = redirectTo || '/'
     }
   }
 

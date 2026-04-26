@@ -1,6 +1,6 @@
 import { getUserSettings } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/settings-form'
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) notFound()
+  if (!user) redirect('/login?redirect=/settings')
 
   const { data: settings } = await getUserSettings()
   const displayName = settings?.display_name ?? user.email?.split('@')[0] ?? ''

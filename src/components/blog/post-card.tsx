@@ -136,20 +136,20 @@ export function PostCard({ post, showActions }: { post: PostCardData; showAction
     )
   }
 
-  // Public list layout: Card, entire card is a link (all posts are published here)
+  // Public list layout
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <Link href={`/posts/${post.slug}`} className="block">
-        <CardHeader className="pb-2">
+      <CardHeader className="pb-2">
+        <Link href={`/posts/${post.slug}`} className="block hover:text-primary transition-colors">
           <h2 className="text-xl font-semibold leading-tight truncate min-w-0">{post.title}</h2>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {post.excerpt && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
-          )}
-          {metaRow}
-        </CardContent>
-      </Link>
+        </Link>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {post.excerpt && (
+          <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
+        )}
+        {metaRow}
+      </CardContent>
     </Card>
   )
 }

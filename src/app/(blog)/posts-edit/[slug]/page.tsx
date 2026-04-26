@@ -1,6 +1,6 @@
 import { getPostBySlug } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,15 +13,18 @@ interface PageProps {
 
 export default async function EditPostPage({ params }: PageProps) {
   const { slug } = await params
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect(`/login?redirect=/posts-edit/${slug}`)
+
   const { data: post, error } = await getPostBySlug(slug)
 
   if (!post || error) {
     notFound()
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.id !== post.author_id) {
+  if (user.id !== post.author_id) {
     return <p className="text-destructive">无权编辑此文章</p>
   }
 
