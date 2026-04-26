@@ -1,79 +1,74 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+为 Claude Code (claude.ai/code) 提供的项目指引。
 
-## Build & Dev Commands
+## 常用命令
 
 ```bash
-# Dev server (listens on all interfaces)
-npm run dev
-
-# Build
-npm run build
-
-# Lint
-npm run lint
-
-# Type check
-npx tsc --noEmit
+npm run dev        # 启动开发服务器 (监听所有网卡)
+npm run build      # 构建生产版本
+npm run lint       # ESLint 检查
+npx tsc --noEmit   # TypeScript 类型检查
 ```
 
-## Project Architecture
+## 项目架构
 
-### Stack
-- **Framework**: Next.js 16 (App Router), React 19
-- **Database**: Supabase (PostgreSQL) with RLS
-- **Auth**: Supabase Auth (PKCE flow) via `@supabase/ssr`
-- **Styling**: Tailwind CSS v4 (CSS-based config, no tailwind.config.*), shadcn/ui (base-nova style)
-- **Icons**: Lucide React
+### 技术栈
+- **框架**: Next.js 16 (App Router), React 19
+- **数据库**: Supabase (PostgreSQL) + RLS 行级安全策略
+- **认证**: Supabase Auth (PKCE 流程) via `@supabase/ssr`
+- **样式**: Tailwind CSS v4 (CSS 配置模式, 无 tailwind.config.*), shadcn/ui (base-nova 风格)
+- **图标**: Lucide React
 
-### Route Structure
+### 路由结构
 
-- `(auth)/` — login, register, settings (protected)
-- `(blog)/` — home (post list), posts/[slug] (detail), posts/new, posts-edit/[slug], my-posts
-- `author/` — author list, author/[authorId] (profile + guestbook)
-- `api/` — auth/callback, generate-summary, site-stats, my-ip
+| 路由分组 | 页面 |
+|---------|------|
+| `(auth)/` | login, register, settings (需登录) |
+| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], my-posts |
+| `author/` | 作者列表, author/[authorId] (个人页 + 留言板) |
+| `api/` | auth/callback, generate-summary, site-stats, my-ip |
 
-### Supabase Clients (src/lib/supabase/)
+### Supabase 客户端 (src/lib/supabase/)
 
-| File | Use Case |
-|------|----------|
-| `client.ts` | `createBrowserClient` — browser-side (client components) |
-| `server.ts` | `createServerClient` — server components & server actions |
-| `admin.ts` | Service role client — admin operations (list users, delete accounts) |
-| `middleware.ts` | `updateSession()` — cookie management per request |
+| 文件 | 用途 |
+|------|------|
+| `client.ts` | `createBrowserClient` — 浏览器端 (client components) |
+| `server.ts` | `createServerClient` — 服务端组件 & Server Actions |
+| `admin.ts` | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
+| `middleware.ts` | `updateSession()` — 每个请求的 cookie 管理 |
 
-### Data Flow
+### 数据流
 
-1. **Reads**: Server components query Supabase directly, pass data as props to client components
-2. **Mutations**: Server Actions (`'use server'` in `src/lib/actions/`) return `ActionResult = { error?: string }`
-3. **Caching**: Public pages use `revalidate = 300`; `revalidatePath()` after mutations
+1. **读取**: 服务端组件直接查询 Supabase, 将数据通过 props 传给客户端组件
+2. **写入**: Server Actions (`'use server'` in `src/lib/actions/`) 统一返回 `ActionResult = { error?: string }`
+3. **缓存**: 公开页面用 `revalidate = 300`; 修改后调用 `revalidatePath()` 清除缓存
 
-### Key Patterns
+### 关键设计模式
 
-- **Threaded comments/guestbook**: 2-level nesting built client-side from flat DB queries
-- **Post likes**: Dual tracking (auth user by `user_id`, anonymous by `ip`) with unique constraints
-- **Theme**: Context provider with light/dark/system, persisted via localStorage + cookie
-- **Markdown**: `react-markdown` with remark-gfm, rehype-sanitize, rehype-highlight
+- **评论/留言板**: 2 层嵌套, 从扁平 DB 查询结果在客户端构建树结构
+- **文章点赞**: 双重追踪 — 登录用户用 `user_id`, 匿名用户用 `ip`, 唯一约束防重复
+- **主题**: Context Provider 支持 light/dark/system, 通过 localStorage + cookie 持久化
+- **Markdown**: `react-markdown` + remark-gfm + rehype-sanitize + rehype-highlight
 
-### Database (supabase/schema.sql)
+### 数据库 (supabase/schema.sql)
 
-Tables: posts, post_likes, post_comments, comment_likes, user_settings, site_views, site_likes, guestbook_messages
+**表**: posts, post_likes, post_comments, comment_likes, user_settings, site_views, site_likes, guestbook_messages
 
-Triggers: auto `updated_at`, auto-create `user_settings` on registration
+**触发器**: 自动更新 `updated_at`; 注册时自动创建 `user_settings` 行
 
-RLS enabled on all tables — see schema.sql for per-table policies.
+**RLS**: 所有表启用行级安全策略, 详见 schema.sql
 
-### Environment Variables
+## 环境变量
 
-| Variable | Required | Scope |
-|----------|----------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Client+Server |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Client+Server |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Server only |
-| `NEXT_PUBLIC_SITE_TITLE` | Yes | Client+Server |
-| `NEXT_PUBLIC_SITE_URL` | Yes | Client+Server |
-| `NEXT_PUBLIC_SITE_DESCRIPTION` | No | Client+Server |
-| `OPENAI_API_KEY` | No | Server (summary gen) |
-| `OPENAI_BASE_URL` | No | Server |
-| `OPENAI_MODEL` | No | Server (default: gpt-4o-mini) |
+| 变量 | 必填 | 范围 |
+|------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | 是 | 客户端+服务端 |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 是 | 客户端+服务端 |
+| `SUPABASE_SERVICE_ROLE_KEY` | 是 | 仅服务端 |
+| `NEXT_PUBLIC_SITE_TITLE` | 是 | 客户端+服务端 |
+| `NEXT_PUBLIC_SITE_URL` | 是 | 客户端+服务端 |
+| `NEXT_PUBLIC_SITE_DESCRIPTION` | 否 | 客户端+服务端 |
+| `OPENAI_API_KEY` | 否 | 服务端 (摘要生成) |
+| `OPENAI_BASE_URL` | 否 | 服务端 |
+| `OPENAI_MODEL` | 否 | 服务端 (默认: gpt-4o-mini) |
