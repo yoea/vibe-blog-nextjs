@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       siteName: siteTitle,
       url: siteUrl,
-      images: siteUrl ? [{ url: `${siteUrl}/logo.svg`, width: 120, height: 120 }] : undefined,
+      images: siteUrl ? [{ url: `${siteUrl}/og-image.jpg`, width: 1200, height: 630 }] : undefined,
     },
   }
 }

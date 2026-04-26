@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       modifiedTime: post.updated_at,
       url: `${process.env.NEXT_PUBLIC_SITE_URL}/posts/${slug}`,
       images: process.env.NEXT_PUBLIC_SITE_URL
-        ? [{ url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.svg`, width: 120, height: 120 }]
+        ? [{ url: `${process.env.NEXT_PUBLIC_SITE_URL}/og-image.jpg`, width: 1200, height: 630 }]
         : undefined,
     },
   }
