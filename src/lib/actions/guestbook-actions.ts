@@ -9,6 +9,7 @@ export async function createGuestbookMessage(toAuthorId: string, content: string
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '请先登录' }
   if (!content.trim()) return { error: '内容不能为空' }
+  if (content.trim().length > 500) return { error: '内容不能超过 500 个字符' }
 
   const insertData: any = {
     to_author_id: toAuthorId,

@@ -14,6 +14,7 @@ export async function createComment(postId: string, content: string, parentId?: 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '未登录' }
   if (!content.trim()) return { error: '评论内容不能为空' }
+  if (content.trim().length > 500) return { error: '评论内容不能超过 500 个字符' }
 
   const insertData: any = {
     post_id: postId,

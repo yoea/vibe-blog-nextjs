@@ -174,6 +174,13 @@ create policy "own_comment_update"
 create policy "own_comment_delete"
   on post_comments for delete using (auth.uid() = author_id);
 
+create policy "post_author_comment_delete"
+  on post_comments for delete using (
+    auth.uid() in (
+      select p.author_id from posts p where p.id = post_id
+    )
+  );
+
 -- Comment Likes RLS
 alter table comment_likes enable row level security;
 

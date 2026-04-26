@@ -42,13 +42,12 @@ export async function getPublishedPosts(page = 1, limit = 10) {
 
 export async function getPostBySlug(slug: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: post, error: postError } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+  // Fetch user and post in parallel
+  const [{ data: { user } }, { data: post, error: postError }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('posts').select('*').eq('slug', slug).single(),
+  ])
 
   if (postError) return { data: null, error: postError.message }
   if (!post) return { data: null, error: '文章不存在' }
@@ -58,26 +57,16 @@ export async function getPostBySlug(slug: string) {
     return { data: null, error: '文章不存在' }
   }
 
-  // Fetch author display name
-  const { data: authorSettings } = await supabase
-    .from('user_settings')
-    .select('display_name')
-    .eq('user_id', post.author_id)
-    .maybeSingle()
-
-  const { count: likeCount } = await supabase
-    .from('post_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('post_id', post.id)
-
-  const { data: userLike } = user
-    ? await supabase
-        .from('post_likes')
-        .select('id')
-        .eq('post_id', post.id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-    : { data: null }
+  // Fetch author settings, like count, comment count, and user/IP like check in parallel
+  const [authorSettingsResult, { count: likeCount }, commentCountResult, userLikeResult] = await Promise.all([
+    supabase.from('user_settings').select('display_name').eq('user_id', post.author_id).maybeSingle(),
+    supabase.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
+    supabase.from('post_comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
+    // For authenticated users, check their like
+    user
+      ? supabase.from('post_likes').select('id').eq('post_id', post.id).eq('user_id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
 
   // For unauthenticated users, check IP-based like
   let ipLike = false
@@ -97,20 +86,17 @@ export async function getPostBySlug(slug: string) {
     }
   }
 
-  const { count: commentCount } = await supabase
-    .from('post_comments')
-    .select('*', { count: 'exact', head: true })
-    .eq('post_id', post.id)
+  const commentCount = commentCountResult.count ?? 0
 
   const result = {
     ...post,
     author: {
       email: null,
-      name: authorSettings?.display_name ?? null,
+      name: authorSettingsResult.data?.display_name ?? null,
     },
     like_count: likeCount ?? 0,
-    comment_count: commentCount ?? 0,
-    is_liked_by_current_user: !!userLike || ipLike,
+    comment_count: commentCount,
+    is_liked_by_current_user: !!userLikeResult?.data || ipLike,
   } as unknown as PostWithAuthor
 
   return { data: result, error: null }
@@ -118,29 +104,31 @@ export async function getPostBySlug(slug: string) {
 
 export async function getCommentsForPost(postId: string, options?: { page?: number; pageSize?: number }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
   const { page = 1, pageSize = 10 } = options ?? {}
 
-  // Get total count of top-level comments
-  const { count: total } = await supabase
-    .from('post_comments')
-    .select('*', { count: 'exact', head: true })
-    .eq('post_id', postId)
-    .is('parent_id', null)
+  // Fetch user, count, and top-level comments in parallel
+  const results = await Promise.all([
+    supabase.auth.getUser() as any,
+    supabase
+      .from('post_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId)
+      .is('parent_id', null),
+    supabase
+      .from('post_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .is('parent_id', null)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * pageSize, (page - 1) * pageSize + pageSize - 1),
+  ])
 
-  // Fetch top-level comments for this page
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
-  const { data: topLevelComments, error } = await supabase
-    .from('post_comments')
-    .select('*')
-    .eq('post_id', postId)
-    .is('parent_id', null)
-    .order('created_at', { ascending: false })
-    .range(from, to)
+  const user = results[0]?.data?.user ?? null
+  const total = results[1]?.count ?? 0
+  const { data: topLevelComments, error } = results[2] ?? { data: null, error: null }
 
   if (error) return { data: [], total: 0, error: error.message }
-  if (!topLevelComments?.length) return { data: [], total: total ?? 0, error: null }
+  if (!topLevelComments?.length) return { data: [], total, error: null }
 
   // Fetch all replies for these top-level comments (2 levels deep)
   const topLevelIds = topLevelComments.map((c) => c.id)
@@ -168,39 +156,42 @@ export async function getCommentsForPost(postId: string, options?: { page?: numb
     }
   }
 
-  // Enrich all fetched comments
+  // Fetch author display names and comment likes in parallel
   const commentIds = allComments.map((c) => c.id)
   const authorIds = [...new Set(allComments.map((c) => c.author_id))]
   const settingsMap = new Map<string, string>()
   const likeCountMap = new Map<string, number>()
   const userLikedMap = new Map<string, boolean>()
 
-  if (authorIds.length > 0) {
-    const { data: settings } = await supabase
-      .from('user_settings')
-      .select('user_id, display_name')
-      .in('user_id', authorIds)
-    if (settings) {
-      for (const s of settings) {
-        if (s.display_name) settingsMap.set(s.user_id, s.display_name)
-      }
-    }
-  }
-
-  if (commentIds.length > 0) {
-    const { data: likes } = await supabase
-      .from('comment_likes')
-      .select('comment_id, user_id')
-      .in('comment_id', commentIds)
-    if (likes) {
-      for (const l of likes) {
-        likeCountMap.set(l.comment_id, (likeCountMap.get(l.comment_id) ?? 0) + 1)
-        if (user && l.user_id === user.id) {
-          userLikedMap.set(l.comment_id, true)
+  await Promise.all([
+    (async () => {
+      if (authorIds.length === 0) return
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('user_id, display_name')
+        .in('user_id', authorIds)
+      if (settings) {
+        for (const s of settings) {
+          if (s.display_name) settingsMap.set(s.user_id, s.display_name)
         }
       }
-    }
-  }
+    })(),
+    (async () => {
+      if (commentIds.length === 0) return
+      const { data: likes } = await supabase
+        .from('comment_likes')
+        .select('comment_id, user_id')
+        .in('comment_id', commentIds)
+      if (likes) {
+        for (const l of likes) {
+          likeCountMap.set(l.comment_id, (likeCountMap.get(l.comment_id) ?? 0) + 1)
+          if (user && l.user_id === user.id) {
+            userLikedMap.set(l.comment_id, true)
+          }
+        }
+      }
+    })(),
+  ])
 
   const enrich = (item: any): CommentWithAuthor => ({
     ...item,
