@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { PostListClient } from '@/components/blog/post-list-client'
 import { loadMoreMyPosts } from '@/lib/actions/post-actions'
 import Link from 'next/link'
+import { ArrowLeft, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { getUserColor } from '@/lib/utils/colors'
+import { formatDaysAgo } from '@/lib/utils/time'
 
 export default async function MyPostsPage() {
   const supabase = await createClient()
@@ -10,15 +14,54 @@ export default async function MyPostsPage() {
 
   if (!user) return null
 
+  // Fetch display name
+  const { data: userSettings } = await supabase
+    .from('user_settings')
+    .select('display_name')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const authorName = userSettings?.display_name ?? user.email?.split('@')[0] ?? '我'
+  const createdAt = user.created_at ?? null
+
   const { data: posts, count, error } = await getPostsByAuthor(user.id, 1, 10)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">我的文章 <span className="text-base font-normal text-muted-foreground">{count ?? 0} 篇</span></h1>
-        <Link href="/posts/new" className="inline-flex items-center px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity cursor-pointer">
-          写新文章
+      <Button variant="ghost" size="sm">
+        <Link href="/" className="flex items-center gap-1 pl-0">
+          <ArrowLeft className="h-4 w-4" />
+          返回文章列表
         </Link>
+      </Button>
+
+      <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
+        <div
+          className="flex items-center justify-center w-12 h-12 rounded-full text-lg font-bold text-white shrink-0"
+          style={{ backgroundColor: getUserColor(user.id) }}
+        >
+          {authorName[0]}
+        </div>
+        <div className="space-y-1 flex-1">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">{authorName}</h1>
+            <Link href="/posts/new">
+              <Button size="sm">写新文章</Button>
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            {createdAt && (
+              <span className="flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                加入 {formatDaysAgo(createdAt)}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              {count ?? 0} 篇文章
+            </span>
+          </div>
+        </div>
       </div>
 
       {error ? (
