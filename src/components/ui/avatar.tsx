@@ -76,11 +76,10 @@ export function Avatar({ avatarUrl, displayName, userId, size = 'md', className,
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="sm:max-w-lg p-2">
           <div className="flex items-center justify-center">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={avatarUrl!}
               alt={displayName ?? 'avatar'}
-              width={512}
-              height={512}
               className="object-contain rounded-lg max-h-[80vh] w-auto h-auto"
             />
           </div>
