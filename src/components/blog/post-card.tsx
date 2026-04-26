@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Calendar, Heart, MessageSquare, Edit2, Trash2, Globe, Lock } from 'lucide-react'
+import { Calendar, Heart, MessageSquare, Edit2, Trash2, Globe, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
@@ -16,8 +16,6 @@ import {
 } from '@/components/ui/dialog'
 import { deletePost } from '@/lib/actions/post-actions'
 import { toast } from 'sonner'
-
-import { Avatar } from '@/components/ui/avatar'
 
 interface PostCardData {
   id: string
@@ -70,12 +68,7 @@ export function PostCard({ post, showActions }: { post: PostCardData; showAction
       </span>
       {post.author?.name && post.author_id && (
         <Link href={`/author/${post.author_id}`} className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
-          <Avatar
-            avatarUrl={(post.author as any).avatar_url ?? null}
-            displayName={post.author.name}
-            userId={post.author_id}
-            size="xs"
-          />
+          <User className="h-3 w-3" />
           {post.author.name}
         </Link>
       )}

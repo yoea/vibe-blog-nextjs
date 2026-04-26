@@ -84,6 +84,7 @@ export function AuthorListClient({
                     displayName={user.displayName}
                     userId={user.id}
                     size="sm"
+                    defer
                   />
                   <div>
                     <span

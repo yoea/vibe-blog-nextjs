@@ -66,6 +66,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
           userId={item.author_id}
           size="xs"
           className="mt-0.5"
+          defer
         />
         <div className="flex-1 space-y-1 min-w-0">
           <div className="flex items-center justify-between text-xs text-muted-foreground">

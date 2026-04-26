@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { getUserColor } from '@/lib/utils/colors'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,8 @@ interface AvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   previewable?: boolean
+  /** 延迟加载头像图片，先显示 fallback 再异步加载，适合列表页批量使用 */
+  defer?: boolean
 }
 
 const sizeMap = {
@@ -26,16 +28,29 @@ const sizeMap = {
   xl: { px: 64, fontSize: 'text-xl' },
 }
 
-export function Avatar({ avatarUrl, displayName, userId, size = 'md', className, previewable }: AvatarProps) {
+export function Avatar({ avatarUrl, displayName, userId, size = 'md', className, previewable, defer }: AvatarProps) {
   const [imgError, setImgError] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [showImage, setShowImage] = useState(!defer)
+  const mountedRef = useRef(false)
   const { px, fontSize } = sizeMap[size]
   const initial = (displayName ?? userId).charAt(0).toUpperCase()
   const bgColor = getUserColor(userId)
 
+  useEffect(() => {
+    mountedRef.current = true
+    if (defer && avatarUrl) {
+      const id = requestAnimationFrame(() => {
+        if (mountedRef.current) setShowImage(true)
+      })
+      return () => cancelAnimationFrame(id)
+    }
+  }, [defer, avatarUrl])
+
+  const shouldShowImage = avatarUrl && !imgError && showImage
   const showPreview = previewable && avatarUrl && !imgError
 
-  const avatarContent = avatarUrl && !imgError ? (
+  const avatarContent = shouldShowImage ? (
     <div
       className={cn(
         'relative rounded-full overflow-hidden shrink-0',
