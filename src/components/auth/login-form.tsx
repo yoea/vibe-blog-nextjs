@@ -2,15 +2,26 @@
 
 import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 
 export function LoginForm() {
   const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter()
+  const [checking, setChecking] = useState(true)
+  const redirectedRef = useRef(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && !redirectedRef.current) {
+        redirectedRef.current = true
+        toast.info('已登录，正在跳转')
+        window.location.href = '/my-posts'
+      } else {
+        setChecking(false)
+      }
+    })
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -26,27 +37,23 @@ export function LoginForm() {
       toast.error(error.message)
     } else {
       toast.success('登录成功')
-      router.refresh()
+      window.location.href = '/'
     }
   }
+
+  if (checking) return null
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="email" className="block text-sm font-medium">邮箱</label>
-        <input id="email" name="email" type="email" placeholder="you@example.com" required
+        <input id="email" name="email" type="email" placeholder="you@example.com" required autoComplete="email"
           className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
       <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium">密码</label>
-        <div className="relative">
-          <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={6}
-            className="w-full px-3 pr-10 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
+        <input id="password" name="password" type="password" required minLength={6} autoComplete="current-password"
+          className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <SubmitButton />

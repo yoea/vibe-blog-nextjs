@@ -5,6 +5,7 @@ import { deleteComment } from '@/lib/actions/comment-actions'
 import type { CommentWithAuthor } from '@/lib/db/types'
 import { Trash2 } from 'lucide-react'
 import { getUserColor } from '@/lib/utils/colors'
+import { formatTimeAgo } from '@/lib/utils/time'
 import {
   Dialog,
   DialogContent,
@@ -17,9 +18,11 @@ import { Button } from '@/components/ui/button'
 
 export function CommentItem({
   comment,
+  canDelete,
   onDelete,
 }: {
   comment: CommentWithAuthor
+  canDelete: boolean
   onDelete: (commentId: string) => void
 }) {
   const [deleting, setDeleting] = useState(false)
@@ -48,17 +51,19 @@ export function CommentItem({
             <span className="font-medium" style={{ color: getUserColor(comment.author_id) }}>
               {comment.author?.display_name ?? comment.author_email?.split('@')[0] ?? '匿名用户'}
             </span>
-            <span>{new Date(comment.created_at).toLocaleDateString('zh-CN')}</span>
+            <span>{formatTimeAgo(comment.created_at)}</span>
           </div>
-          <p className="text-sm">{comment.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-all">{comment.content}</p>
         </div>
-        <button
-          onClick={() => setShowConfirm(true)}
-          disabled={deleting}
-          className="text-muted-foreground hover:text-destructive transition-colors self-start shrink-0"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {canDelete && (
+          <button
+            onClick={() => setShowConfirm(true)}
+            disabled={deleting}
+            className="text-muted-foreground hover:text-destructive transition-colors self-start shrink-0"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>

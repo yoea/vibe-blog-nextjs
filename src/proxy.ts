@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path)
   )
   if (isAuthPath && user) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('/my-posts', request.url))
   }
 
   return response

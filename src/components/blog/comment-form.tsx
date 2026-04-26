@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
+const MAX_COMMENT_LENGTH = 500
+
 export function CommentForm({
   postId,
   onSubmit,
@@ -18,6 +20,7 @@ export function CommentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!comment.trim()) return
+    if (comment.trim().length > MAX_COMMENT_LENGTH) return
 
     setSubmitting(true)
     setError('')
@@ -41,9 +44,15 @@ export function CommentForm({
         onChange={(e) => setComment(e.target.value)}
         placeholder="写下你的评论..."
         rows={3}
+        maxLength={MAX_COMMENT_LENGTH}
       />
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={submitting || !comment.trim()} size="sm">
+      <div className="flex items-center justify-between">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <p className="text-xs text-muted-foreground ml-auto">
+          {comment.length}/{MAX_COMMENT_LENGTH}
+        </p>
+      </div>
+      <Button type="submit" disabled={submitting || !comment.trim() || comment.trim().length > MAX_COMMENT_LENGTH} size="sm">
         {submitting ? '提交中...' : '发表评论'}
       </Button>
     </form>

@@ -3,14 +3,12 @@
 import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Mail, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function RegisterForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -45,19 +43,13 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium">邮箱</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" required
+          <input id="email" name="email" type="email" placeholder="you@example.com" required autoComplete="email"
             className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-medium">密码</label>
-          <div className="relative">
-            <input id="password" name="password" type={showPassword ? 'text' : 'password'} required minLength={8}
-              className="w-full px-3 pr-10 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
+          <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password"
+            className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <SubmitButton />

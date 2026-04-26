@@ -5,9 +5,10 @@ import { LikeButton } from '@/components/blog/like-button'
 import { CommentSection } from '@/components/blog/comment-section'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, Edit2 } from 'lucide-react'
+import { ArrowLeft, Edit2, User } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { formatTimeAgo } from '@/lib/utils/time'
+import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const revalidate = 300;
@@ -33,6 +34,10 @@ export default async function PostPage({ params }: PageProps) {
 
   const { data: comments } = await getCommentsForPost(post.id)
 
+  const supabase = await createClient()
+  const { data: { user: currentUser } } = await supabase.auth.getUser()
+  const currentUserId = currentUser?.id ?? null
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm">
@@ -47,14 +52,15 @@ export default async function PostPage({ params }: PageProps) {
           <h1 className="text-3xl font-bold leading-tight">{post.title}</h1>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
-              {post.author?.name && (
-                <Link href={`/author/${post.author_id}`} className="font-medium hover:text-foreground transition-colors">
-                  {post.author.name}
+              {post.author && (
+                <Link href={`/author/${post.author_id}`} className="flex items-center gap-1 font-medium hover:text-foreground transition-colors">
+                  <User className="h-3.5 w-3.5" />
+                  {post.author.name ?? post.author.email?.split('@')[0] ?? '作者'}
                 </Link>
               )}
-              <span className="text-[9px]">{formatTimeAgo(post.created_at)}</span>
+              <span className="text-[9px]">{new Date(post.created_at).toLocaleDateString('zh-CN')}</span>
               {post.updated_at !== post.created_at && (
-                <span className="text-[9px]">最后修改：{formatTimeAgo(post.updated_at)}</span>
+                <span className="text-[9px]">修改于 {formatTimeAgo(post.updated_at)}</span>
               )}
             </div>
             {!post.published && (
@@ -90,7 +96,7 @@ export default async function PostPage({ params }: PageProps) {
 
       <Separator />
 
-      <CommentSection postId={post.id} initialComments={comments ?? []} />
+      <CommentSection postId={post.id} postAuthorId={post.author_id} currentUserId={currentUserId} initialComments={comments ?? []} />
     </div>
   )
 }

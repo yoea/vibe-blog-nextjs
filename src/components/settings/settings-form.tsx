@@ -3,13 +3,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import { updateUserSettings } from '@/lib/actions/settings-actions'
-import { resetPasswordForEmail } from '@/lib/actions/auth-actions'
+import { resetPasswordForEmail, deleteAccount } from '@/lib/actions/auth-actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 
 interface Props {
@@ -20,6 +29,8 @@ interface Props {
 export function SettingsForm({ user, displayName }: Props) {
   const [name, setName] = useState(displayName)
   const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
   const router = useRouter()
 
   const handleSave = async () => {
@@ -30,6 +41,25 @@ export function SettingsForm({ user, displayName }: Props) {
     } else {
       toast.success('保存成功')
       router.refresh()
+    }
+  }
+
+  const handleLogout = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    toast.info('已退出登录')
+    router.push('/')
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true)
+    const { error } = await deleteAccount()
+    setDeletingAccount(false)
+    if (error) {
+      toast.error(error)
+    } else {
+      toast.success('账号已注销')
+      router.push('/')
     }
   }
 
@@ -84,6 +114,36 @@ export function SettingsForm({ user, displayName }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>账户操作</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
+          <div>
+            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">注销账号</Button>
+            <p className="text-xs text-muted-foreground mt-1">注销后你的文章和评论将被保留，仅用户信息匿名化</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>注销账号</DialogTitle>
+            <DialogDescription>
+              确定要注销账号吗？你的文章和评论将被保留，但用户信息将匿名化。此操作不可撤销。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>取消</Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deletingAccount}>
+              {deletingAccount ? '注销中...' : '确认注销'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

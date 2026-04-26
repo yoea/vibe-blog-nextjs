@@ -3,14 +3,11 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { LogIn, LogOut, FileText, Settings, Users } from 'lucide-react'
+import { LogIn, FileText, Settings, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 
 export function Header({ siteTitle }: { siteTitle: string }) {
   const [user, setUser] = useState<{ email: string | null } | null>(null)
-  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -25,14 +22,6 @@ export function Header({ siteTitle }: { siteTitle: string }) {
 
     return () => subscription.unsubscribe()
   }, [])
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    toast.info('已退出登录')
-    router.push('/')
-  }
 
   return (
     <header className="border-b bg-white">
@@ -60,11 +49,6 @@ export function Header({ siteTitle }: { siteTitle: string }) {
                 <Settings className="h-4 w-4 inline mr-1" />
                 设置
               </Link>
-              <button onClick={handleLogout}
-                className="px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-                <LogOut className="h-4 w-4 inline mr-1" />
-                退出
-              </button>
             </>
           )}
           {!user && (

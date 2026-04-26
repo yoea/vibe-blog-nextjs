@@ -40,10 +40,31 @@ export async function deleteComment(commentId: string, postId: string): Promise<
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '未登录' }
 
+  // 允许评论作者或文章作者删除
+  const { data: comment } = await supabase
+    .from('post_comments')
+    .select('author_id')
+    .eq('id', commentId)
+    .single()
+
+  if (!comment) return { error: '评论不存在' }
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select('author_id')
+    .eq('id', postId)
+    .single()
+
+  const isCommentAuthor = comment.author_id === user.id
+  const isPostAuthor = post?.author_id === user.id
+
+  if (!isCommentAuthor && !isPostAuthor) {
+    return { error: '无权限删除此评论' }
+  }
+
   const { error } = await supabase.from('post_comments')
     .delete()
     .eq('id', commentId)
-    .eq('author_id', user.id)
 
   if (error) return { error: error.message }
   const slug = await getPostSlug(supabase, postId)

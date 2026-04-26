@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
           <div className="relative">
             <input id="password" type={showPassword ? 'text' : 'password'}
               value={password} onChange={(e) => setPassword(e.target.value)}
-              required minLength={8}
+              required minLength={8} autoComplete="new-password"
               className="w-full px-3 pr-10 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
           <div className="relative">
             <input id="confirm" type={showConfirm ? 'text' : 'password'}
               value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-              required minLength={8}
+              required minLength={8} autoComplete="new-password"
               className="w-full px-3 pr-10 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             <button type="button" onClick={() => setShowConfirm(!showConfirm)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">

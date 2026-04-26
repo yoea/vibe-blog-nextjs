@@ -8,7 +8,7 @@ export function PostCard({ post }: { post: PostWithAuthor }) {
     <Card className="hover:shadow-md transition-shadow">
       <Link href={`/posts/${post.slug}`} className="block">
         <CardHeader className="pb-2">
-          <h2 className="text-xl font-semibold leading-tight">{post.title}</h2>
+          <h2 className="text-xl font-semibold leading-tight line-clamp-2">{post.title}</h2>
         </CardHeader>
         <CardContent className="space-y-3">
           {post.excerpt && (
@@ -29,9 +29,9 @@ export function PostCard({ post }: { post: PostWithAuthor }) {
               <MessageSquare className="h-3 w-3" />
               {post.comment_count}
             </span>
-            {post.author?.email && (
+            {post.author && (
               <span className="flex items-center gap-1">
-                {post.author.email.split('@')[0]}
+                {post.author.name ?? post.author.email?.split('@')[0] ?? ''}
               </span>
             )}
           </div>

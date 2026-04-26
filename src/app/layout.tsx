@@ -42,7 +42,7 @@ export default async function RootLayout({
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
 
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
       <body className="flex flex-col bg-gray-50">
         <Header siteTitle={siteTitle} />
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">{children}</main>

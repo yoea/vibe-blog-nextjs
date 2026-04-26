@@ -8,9 +8,13 @@ import type { CommentWithAuthor } from '@/lib/db/types'
 
 export function CommentSection({
   postId,
+  postAuthorId,
+  currentUserId,
   initialComments,
 }: {
   postId: string
+  postAuthorId: string
+  currentUserId: string | null
   initialComments: CommentWithAuthor[]
 }) {
   const [comments, setComments] = useState<CommentWithAuthor[]>(initialComments)
@@ -39,6 +43,7 @@ export function CommentSection({
             <CommentItem
               key={comment.id}
               comment={comment}
+              canDelete={currentUserId === comment.author_id || currentUserId === postAuthorId}
               onDelete={handleDeleteComment}
             />
           ))}
