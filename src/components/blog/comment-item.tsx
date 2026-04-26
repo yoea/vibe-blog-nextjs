@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { deleteComment, toggleCommentLike } from '@/lib/actions/comment-actions'
 import type { CommentWithAuthor } from '@/lib/db/types'
 import Link from 'next/link'
@@ -35,6 +35,9 @@ export function CommentItem({
   const [liked, setLiked] = useState(comment.is_liked)
   const [likeCount, setLikeCount] = useState(comment.like_count)
   const [likeLoading, setLikeLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   async function handleDelete() {
     setDeleting(true)
@@ -72,7 +75,7 @@ export function CommentItem({
             <Link href={`/author/${comment.author_id}`} className="font-medium hover:underline truncate" style={{ color: getUserColor(comment.author_id) }}>
               {displayName}
             </Link>
-            <span className="shrink-0 ml-2">{formatTimeAgo(comment.created_at)}</span>
+            <span className="shrink-0 ml-2">{mounted ? formatTimeAgo(comment.created_at) : ''}</span>
           </div>
           <p className="text-sm whitespace-pre-wrap break-words">{comment.content}</p>
 

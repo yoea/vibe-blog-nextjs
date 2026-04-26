@@ -24,14 +24,21 @@ export function CommentSection({
     const result = await createComment(postId, content, parentId)
     if (!result.error && result.data) {
       if (parentId) {
-        // Append reply to parent's replies array
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === parentId
+        // 追加到父评论的 replies 中（可能嵌套在某个顶层评论下）
+        setComments((prev) => {
+          const isTopLevel = prev.some((c) => c.id === parentId)
+          if (isTopLevel) {
+            return prev.map((c) =>
+              c.id === parentId ? { ...c, replies: [...(c.replies ?? []), result.data] } : c
+            )
+          }
+          // parentId 是某条回复的 ID，找到包含它的顶层评论
+          return prev.map((c) =>
+            c.replies?.some((r) => r.id === parentId)
               ? { ...c, replies: [...(c.replies ?? []), result.data] }
               : c
           )
-        )
+        })
       } else {
         setComments((prev) => [...prev, result.data])
       }
