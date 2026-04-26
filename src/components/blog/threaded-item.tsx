@@ -103,7 +103,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
 
           <div className="flex items-center gap-3 pt-1">
             {children}
-            {currentUserId && onReply && (
+            {onReply && (
               <button
                 onClick={() => onReply(item.id)}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"

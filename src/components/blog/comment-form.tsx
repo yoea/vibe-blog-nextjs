@@ -62,7 +62,7 @@ export function CommentForm({
           <button type="button" onClick={onCancelReply} className="text-primary hover:underline">取消回复</button>
         </div>
       )}
-      {!currentUserId && !replyTo && (
+      {!currentUserId && (
         <div className="space-y-1">
           {mounted && (
             <label className="text-[11px] text-muted-foreground">
