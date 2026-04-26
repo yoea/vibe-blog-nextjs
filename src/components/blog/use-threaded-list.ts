@@ -54,16 +54,16 @@ export function useThreadedList<T extends ThreadedItem>({
                   ? { ...item, replies: [...(item.replies ?? []), newItem] }
                   : item
               )
-          if (onCountChange) onCountChange(1)
           return next
         })
+        if (onCountChange) onCountChange(1)
       } else {
         setItems((prev) => {
           const next = [newItem, ...prev]
           setTotal((c) => c + 1)
-          if (onCountChange) onCountChange(1)
           return next
         })
+        if (onCountChange) onCountChange(1)
       }
       return { success: true }
     }
@@ -75,16 +75,15 @@ export function useThreadedList<T extends ThreadedItem>({
     if (!result.error) {
       setItems((prev) => {
         const isTopLevel = prev.some((item) => item.id === id)
-        const next = isTopLevel
+        return isTopLevel
           ? prev.filter((item) => item.id !== id)
           : prev.map((item) => ({
               ...item,
               replies: item.replies?.filter((r) => r.id !== id),
             }))
-        if (onCountChange) onCountChange(-1)
-        return next
       })
       setTotal((c) => c - 1)
+      if (onCountChange) onCountChange(-1)
     }
   }
 
