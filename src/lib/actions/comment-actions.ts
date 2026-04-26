@@ -131,7 +131,7 @@ export async function deleteComment(commentId: string, postId: string): Promise<
   return {}
 }
 
-export async function toggleCommentLike(commentId: string): Promise<ActionResult & { liked?: boolean }> {
+export async function toggleCommentLike(commentId: string, clientIp?: string): Promise<ActionResult & { liked?: boolean }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -160,9 +160,8 @@ export async function toggleCommentLike(commentId: string): Promise<ActionResult
   }
 
   // Guest: track by IP
-  const h = await headers()
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? h.get('x-real-ip')
+  const ip = clientIp ?? (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? (await headers()).get('x-real-ip')
     ?? null
   if (!ip || ip === 'unknown') return { error: '无法获取IP' }
 

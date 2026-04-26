@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createComment, getMoreComments } from '@/lib/actions/comment-actions'
 import { deleteComment, toggleCommentLike } from '@/lib/actions/comment-actions'
+import { toast } from 'sonner'
 import { useThreadedList } from './use-threaded-list'
 import { ThreadedItemRenderer } from './threaded-item'
 import { CommentForm } from './comment-form'
@@ -107,18 +108,28 @@ export function CommentSection({
   )
 }
 
-function LikeButton({ comment, currentUserId }: { comment: CommentWithAuthor; currentUserId: string | null }) {
+function LikeButton({ comment }: { comment: CommentWithAuthor; currentUserId: string | null }) {
   const [liked, setLiked] = useState(comment.is_liked)
   const [likeCount, setLikeCount] = useState(comment.like_count)
   const [likeLoading, setLikeLoading] = useState(false)
+  const [ip, setIp] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/my-ip')
+      .then((r) => r.json())
+      .then((data) => setIp(data.ip))
+      .catch(() => setIp('unknown'))
+  }, [])
 
   async function handleLike(e: React.MouseEvent) {
     e.stopPropagation()
     setLikeLoading(true)
-    const result = await toggleCommentLike(comment.id)
+    const result = await toggleCommentLike(comment.id, ip ?? undefined)
     if (!result.error) {
       setLiked(result.liked ?? false)
       setLikeCount((c) => (result.liked ? c + 1 : c - 1))
+    } else {
+      toast.error(result.error)
     }
     setLikeLoading(false)
   }
