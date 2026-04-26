@@ -8,16 +8,12 @@
 - Markdown 文章发布与预览
 - AI 一键生成文章摘要（兼容 OpenAI API）
 - 文章点赞与评论（无需登录也可点赞）
-- 评论字数限制、相对时间显示、删除权限控制
 - Markdown 代码块语法高亮（highlight.js，github-dark-dimmed 主题）
-- 评论区用户名可点击跳转到作者主页
 - 作者主页：头像首字、昵称、注册时间、文章数
 - 首页站点统计（访问量 + 点赞数，IP 去重 + 频率限制）
 - 作者列表页（莫兰迪色系用户标识 + 活跃/注销状态）
 - 移动端响应式适配（汉堡菜单、溢出修复）
 - 用户设置：昵称修改、密码重置、退出登录、账号注销
-- 自动检测登录状态跳转
-- 密码管理器兼容（autoComplete 属性）
 - ISR 5 分钟缓存，缓解 Supabase Free Tier 冷启动延迟
 
 ## 技术栈
@@ -37,16 +33,7 @@ npm install
 
 ### 2. 配置环境变量
 
-复制 `.env.local.example` 为 `.env.local` 并填入你的 Supabase 配置：
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
-NEXT_PUBLIC_SITE_TITLE=你的网站标题
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
-OPENAI_BASE_URL=https://api.openai.com
-```
+复制 `.env.local.example` 为 `.env.local` 并填入你的 Supabase 配置
 
 > Supabase 密钥在项目 Dashboard → **Settings → API** 页面获取。
 > `SUPABASE_SERVICE_ROLE_KEY` 用于作者列表等管理功能，仅在服务端使用。
@@ -83,18 +70,9 @@ npm install
 ```
 
 ### Step 2: 创建环境变量文件
+复制 `.env.local.example` 为 `.env.local` 并填入你的 Supabase 配置
 
 ```bash
-cat > .env.local << 'EOF'
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
-NEXT_PUBLIC_SITE_TITLE=你的网站标题
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
-OPENAI_BASE_URL=https://api.openai.com
-EOF
-```
-
 > `.env.local` 已在 `.gitignore` 中忽略，**不要提交到仓库**。
 
 ### Step 3: 构建生产版本
@@ -121,28 +99,7 @@ PORT=8083 npm start
 
 ### Step 5: 配置 Nginx 反向代理
 
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-### Step 6: 启用 HTTPS（可选）
-
-详细参考1panel自动申请SSL证书方法
+### Step 6: 启用 HTTPS
 
 ### Step 7: 进程守护（PM2）
 
@@ -174,28 +131,6 @@ pm2 startup           # 设置开机自启（按提示执行返回的命令）
 pm2 unstartup         # 关闭开机自启
 ```
 
-也可以通过 `ecosystem.config.js` 管理环境变量：
-
-```js
-module.exports = {
-  apps: [{
-    name: 'vibe-blog',
-    script: 'npm',
-    args: 'start -- -p 8083',
-    env: {
-      NODE_ENV: 'production',
-      PORT: '8083',
-      NEXT_PUBLIC_SUPABASE_URL: 'https://your-project.supabase.co',
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'your_publishable_key',
-      NEXT_PUBLIC_SITE_TITLE: '你的网站标题',
-      SUPABASE_SERVICE_ROLE_KEY: 'your_service_role_key',
-      OPENAI_API_KEY: 'sk-xxxxxxxxxxxxxxxxxxxxxxxx',
-      OPENAI_BASE_URL: 'https://api.openai.com',
-    }
-  }]
-}
-```
-
 然后启动：`pm2 start ecosystem.config.js`
 
 ---
@@ -223,16 +158,6 @@ module.exports = {
 
 1. 进入项目 → **Authentication** → **URL Configuration**
 2. 将 **Site URL** 改为你的生产域名（如 `https://yourdomain.com`）
-3. 在 **Redirect URLs** 中添加：`https://yourdomain.com/auth/callback`
+3. 在 **Redirect URLs** 中添加：`https://yourdomain.com/api/auth/callback`
 
 这样邮箱验证、密码重置等功能才能正常工作。
-
-## 生产环境需变更的配置清单
-
-| 配置项 | 说明 |
-|--------|------|
-| `.env.local` | 在服务器手动创建，填入 Supabase + DeepSeek 连接信息 |
-| 监听端口 | `package.json` 中 `start` 脚本加 `-p 端口号`，或 `PORT=8083 npm start` |
-| Supabase Site URL | 从 `http://localhost:3000` 改为生产域名 |
-| Supabase Redirect URLs | 添加 `https://yourdomain.com/auth/callback` |
-| Nginx `server_name` | 改为你的生产域名 |
