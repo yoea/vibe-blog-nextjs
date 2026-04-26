@@ -27,6 +27,7 @@ export function AuthorCard({
         displayName={displayName}
         userId={userId}
         size="lg"
+        previewable
       />
       <div className="space-y-1 flex-1">
         <div className="flex items-center justify-between">

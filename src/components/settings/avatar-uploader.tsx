@@ -155,6 +155,7 @@ export function AvatarUploader({ userId, displayName, currentAvatarUrl }: Avatar
           displayName={displayName}
           userId={userId}
           size="xl"
+          previewable
         />
         <div className="space-y-2">
           <input
