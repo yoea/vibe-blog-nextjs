@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from 'next'
+import { cookies } from 'next/headers'
 import '@/app/globals.css'
+import 'nprogress/nprogress.css'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Toaster } from 'sonner'
+import { ProgressBar } from '@/components/layout/progress-bar'
+import { ThemeProvider } from '@/components/layout/theme-provider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -40,14 +44,20 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog'
+  const cookieStore = await cookies()
+  const resolved = cookieStore.get('themeResolved')?.value
+  const initialDark = resolved === 'dark'
 
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-      <body className="flex flex-col bg-gray-50">
-        <Header siteTitle={siteTitle} />
-        <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">{children}</main>
-        <Footer />
-        <Toaster position="top-center" richColors />
+    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased${initialDark ? ' dark' : ''}`} suppressHydrationWarning>
+      <body className="flex flex-col bg-background">
+        <ThemeProvider>
+          <ProgressBar />
+          <Header siteTitle={siteTitle} />
+          <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">{children}</main>
+          <Footer />
+          <Toaster position="top-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   )

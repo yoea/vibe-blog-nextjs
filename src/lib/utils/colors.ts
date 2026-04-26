@@ -1,11 +1,11 @@
 export const MORANDI_COLORS = [
-  '#7a8b6f',
-  '#8b7355',
-  '#6b7d8e',
-  '#9a7b7b',
-  '#7b8a7b',
-  '#8a7b6b',
-  '#6f7a8b',
+  '#5B8C4A',
+  '#A0522D',
+  '#2E6DA4',
+  '#B85454',
+  '#3D8B6E',
+  '#C88A2C',
+  '#5A6FA5',
 ]
 
 export function getUserColor(userId: string): string {

@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { generateSlug } from '@/lib/utils/slug'
 
 interface Result {
   error?: string
@@ -18,21 +17,11 @@ export async function savePost(formData: FormData): Promise<Result> {
   const content = formData.get('content') as string
   const excerpt = formData.get('excerpt') as string | null
   const published = formData.get('published') === 'on'
-  let slug = generateSlug(title)
-
-  // Ensure unique slug
-  let attempts = 0
-  while (attempts < 5) {
-    const { count } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('slug', slug)
-    if ((count ?? 0) === 0) break
-    slug += '-' + Math.random().toString(36).slice(2, 5)
-    attempts++
-  }
 
   if (mode === 'update') {
     const postId = formData.get('_id') as string
     const { error } = await supabase.from('posts')
-      .update({ title, slug, content, excerpt, published })
+      .update({ title, content, excerpt, published })
       .eq('id', postId)
       .eq('author_id', user.id)
     if (error) return { error: error.message }
@@ -40,7 +29,10 @@ export async function savePost(formData: FormData): Promise<Result> {
     revalidatePath('/my-posts')
     return {}
   } else {
+    const id = crypto.randomUUID()
+    const slug = id.slice(0, 8)
     const { error } = await supabase.from('posts').insert({
+      id,
       author_id: user.id,
       title,
       slug,

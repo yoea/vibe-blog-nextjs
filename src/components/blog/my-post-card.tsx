@@ -41,7 +41,7 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="flex items-center justify-between border rounded-lg p-4 bg-white">
+      <div className="flex items-center justify-between border rounded-lg p-4 bg-card">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
             <Link href={`/posts/${post.slug}`} className="font-semibold text-lg hover:text-primary transition-colors line-clamp-2">

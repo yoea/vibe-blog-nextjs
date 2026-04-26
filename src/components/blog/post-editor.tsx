@@ -176,7 +176,7 @@ export function PostEditor({ initialData }: Props) {
               }`}
             >
               <span
-                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
+                className={`absolute top-1 left-1 w-4 h-4 bg-background rounded-full transition-transform shadow-sm ${
                   tab === 'preview' ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -215,7 +215,7 @@ export function PostEditor({ initialData }: Props) {
             </div>
             </>
           ) : (
-            <div className="border rounded-lg p-6 overflow-auto h-[400px] bg-white">
+            <div className="border rounded-lg p-6 overflow-auto h-[400px] bg-card">
               <MarkdownPreview content={content || '暂无内容'} />
             </div>
           )}
@@ -235,7 +235,7 @@ export function PostEditor({ initialData }: Props) {
               className="sr-only peer"
             />
             <div className={`relative w-9 h-5 rounded-full transition-colors ${published ? 'bg-primary' : 'bg-gray-300'}`}>
-              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${published ? 'translate-x-4' : 'translate-x-0'}`} />
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-background rounded-full transition-transform ${published ? 'translate-x-4' : 'translate-x-0'}`} />
             </div>
             <span className="text-xs text-muted-foreground">
               {published ? '已发布' : '草稿'}

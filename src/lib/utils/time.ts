@@ -20,8 +20,12 @@ export function formatTimeAgo(date: string | Date): string {
 export function formatDaysAgo(date: string | Date): string {
   const now = new Date()
   const then = date instanceof Date ? date : new Date(date)
-  const diffMs = now.getTime() - then.getTime()
-  const days = Math.floor(diffMs / 86400000)
+
+  // 归一化到零点，按日历日计算差值
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const target = new Date(then.getFullYear(), then.getMonth(), then.getDate())
+
+  const days = Math.round((today.getTime() - target.getTime()) / 86400000)
   if (days < 0) return '今天'
   if (days === 0) return '今天'
   if (days === 1) return '昨天'

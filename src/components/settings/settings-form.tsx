@@ -20,6 +20,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { Sun, Moon, Monitor } from 'lucide-react'
+import { useTheme, type ThemeMode } from '@/components/layout/theme-provider'
 
 interface Props {
   user: User
@@ -31,6 +33,7 @@ export function SettingsForm({ user, displayName }: Props) {
   const [error, setError] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const { mode, setMode } = useTheme()
   const router = useRouter()
 
   const handleSave = async () => {
@@ -118,14 +121,46 @@ export function SettingsForm({ user, displayName }: Props) {
 
       <Card>
         <CardHeader>
+          <CardTitle>主题</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {(['light', 'dark', 'system'] as ThemeMode[]).map((value) => {
+              const Icon = value === 'system' ? Monitor : value === 'dark' ? Moon : Sun
+              const label = value === 'system' ? '跟随系统' : value === 'dark' ? '深色' : '浅色'
+              return (
+                <button
+                  key={value}
+                  onClick={() => setMode(value)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                    mode === value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:bg-muted'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>账户操作</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
-          <div>
+            <div>
+            <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
+            <p className="text-xs text-muted-foreground mt-1">退出登录后，你将返回主页</p>
+            </div>
+            
+            <div>
             <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">注销账号</Button>
             <p className="text-xs text-muted-foreground mt-1">注销后你的文章和评论将被保留，仅用户信息匿名化</p>
-          </div>
+            </div>
         </CardContent>
       </Card>
 
