@@ -50,7 +50,7 @@ export default async function RootLayout({
 
   return (
     <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased${initialDark ? ' dark' : ''}`} suppressHydrationWarning>
-      <body className="flex flex-col bg-background">
+      <body className="flex flex-col bg-background" suppressHydrationWarning>
         <ThemeProvider>
           <ProgressBar />
           <Header siteTitle={siteTitle} />
