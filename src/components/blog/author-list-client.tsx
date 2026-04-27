@@ -1,10 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { formatDaysAgo } from '@/lib/utils/time'
 import { getUserColor } from '@/lib/utils/colors'
 import { Avatar } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 interface AuthorData {
   id: string
@@ -20,15 +31,21 @@ export function AuthorListClient({
   initialAuthors,
   initialHasMore,
   onLoadMore,
+  isAdmin,
+  onDeleteUser,
 }: {
   initialAuthors: AuthorData[]
   initialHasMore: boolean
   onLoadMore: (page: number) => Promise<{ data?: AuthorData[]; count?: number; hasMore?: boolean; error?: string | null }>
+  isAdmin?: boolean
+  onDeleteUser?: (userId: string) => Promise<{ error?: string }>
 }) {
   const [authors, setAuthors] = useState(initialAuthors)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(initialHasMore)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   // Sync when initialAuthors changes (e.g., after refresh)
   useEffect(() => {
@@ -53,6 +70,24 @@ export function AuthorListClient({
     setLoading(false)
   }
 
+  const handleDelete = (userId: string) => {
+    if (!onDeleteUser) return
+    startTransition(async () => {
+      const result = await onDeleteUser(userId)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setAuthors((prev) =>
+          prev.map((a) =>
+            a.id === userId ? { ...a, isDeleted: true, deletedAt: new Date().toISOString() } : a
+          )
+        )
+        setConfirmDeleteId(null)
+        toast.success('已删除用户')
+      }
+    })
+  }
+
   if (!authors.length) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -66,7 +101,7 @@ export function AuthorListClient({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{authors.length}+ 位注册用户</p>
+      <p className="text-sm text-muted-foreground">{authors.length} 位用户</p>
 
       <div className="grid gap-3">
         {activeAuthors.map((user) => {
@@ -74,40 +109,51 @@ export function AuthorListClient({
           const hasPosts = user.postCount > 0
 
           return (
-            <Link
-              key={user.id}
-              href={`/author/${user.id}`}
-              className="block rounded-lg border bg-card p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    avatarUrl={user.avatarUrl}
-                    displayName={user.displayName}
-                    userId={user.id}
-                    size="sm"
-                    defer
-                  />
-                  <div>
-                    <span
-                      className="font-semibold text-base"
-                      style={{ color: getUserColor(user.id) }}
-                    >
-                      {user.displayName}
+            <div key={user.id} className="relative">
+              <Link
+                href={`/author/${user.id}`}
+                className="block rounded-lg border bg-card p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      avatarUrl={user.avatarUrl}
+                      displayName={user.displayName}
+                      userId={user.id}
+                      size="sm"
+                      defer
+                    />
+                    <div>
+                      <span
+                        className="font-semibold text-base"
+                        style={{ color: getUserColor(user.id) }}
+                      >
+                        {user.displayName}
+                      </span>
+                      <div className="text-[10px] text-muted-foreground leading-tight">{user.id.slice(0, 8)}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>文章{user.postCount}篇</span>
+                    <span>注册 {days}</span>
+                    <span className={`inline-flex items-center gap-1 ${hasPosts ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      <span className={`inline-block h-2 w-2 rounded-full ${hasPosts ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      {hasPosts ? '活跃' : '未发布'}
                     </span>
-                    <div className="text-[10px] text-muted-foreground leading-tight">{user.id.slice(0, 8)}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>文章{user.postCount}篇</span>
-                  <span>注册 {days}</span>
-                  <span className={`inline-flex items-center gap-1 ${hasPosts ? 'text-green-600' : 'text-muted-foreground'}`}>
-                    <span className={`inline-block h-2 w-2 rounded-full ${hasPosts ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    {hasPosts ? '活跃' : '未发布'}
-                  </span>
-                </div>
-              </div>
-            </Link>
+              </Link>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmDeleteId(user.id)}
+                  className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )
         })}
       </div>
@@ -171,6 +217,25 @@ export function AuthorListClient({
           </button>
         </div>
       )}
+
+      <Dialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除用户</DialogTitle>
+            <DialogDescription>
+              确定删除该用户？此操作将禁用其账号、扰乱密码，不可撤销。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)} disabled={isPending}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)} disabled={isPending}>
+              {isPending ? '删除中...' : '删除'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
