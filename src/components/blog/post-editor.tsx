@@ -24,6 +24,7 @@ interface Props {
 export function PostEditor({ initialData }: Props) {
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const [fullscreen, setFullscreen] = useState(false)
+  const [fsTab, setFsTab] = useState<'edit' | 'preview'>('edit')
   const [error, setError] = useState('')
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryCooldown, setSummaryCooldown] = useState(false)
@@ -138,8 +139,8 @@ export function PostEditor({ initialData }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} method="post" className="space-y-4" noValidate>
+    <div className="flex flex-col flex-1 gap-6">
+      <form onSubmit={handleSubmit} method="post" className="flex flex-col flex-1 gap-4" noValidate>
         {isEditing && <input type="hidden" name="_mode" value="update" />}
         {isEditing && <input type="hidden" name="_id" value={initialData.id} />}
 
@@ -195,7 +196,7 @@ export function PostEditor({ initialData }: Props) {
 
         <Separator />
 
-        <div className="space-y-4">
+        <div className="flex flex-col flex-1 gap-4">
           <div className="flex items-center gap-2">
             <span className={`text-xs font-medium ${tab === 'edit' ? 'text-foreground' : 'text-muted-foreground'}`}>源码</span>
             <Switch checked={tab === 'preview'} onChange={(c) => setTab(c ? 'preview' : 'edit')} />
@@ -204,18 +205,18 @@ export function PostEditor({ initialData }: Props) {
 
           {tab === 'edit' ? (
             <>
-              <div className="relative">
+              <div className="relative flex-1 min-h-0">
               <textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
                 maxLength={CONTENT_MAX_LENGTH}
                 placeholder="# 开始写作...\n支持 Markdown 语法"
-                className={`font-mono text-base md:text-sm p-4 h-[300px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 ${
+                className={`font-mono text-base md:text-sm p-4 w-full resize-y rounded-md border bg-transparent focus:outline-none focus:ring-2 absolute inset-0 ${
                 contentLength >= CONTENT_MAX_ALERT
                   ? 'focus:ring-red-500 border-red-400'
                   : 'focus:ring-ring border-transparent'
-              } pr-16`}
+              } pr-16 min-h-[200px]`}
               />
               <button
                 type="button"
@@ -233,7 +234,7 @@ export function PostEditor({ initialData }: Props) {
             </div>
             </>
           ) : (
-            <div className="border rounded-lg p-6 overflow-auto h-[400px] bg-card">
+            <div className="border rounded-lg p-6 overflow-auto flex-1 min-h-[200px] bg-card">
               <MarkdownPreview content={content || '暂无内容'} />
             </div>
           )}
@@ -263,31 +264,41 @@ export function PostEditor({ initialData }: Props) {
 
       {fullscreen && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between px-6 py-3 border-b">
-            <span className="font-medium text-sm">全屏编辑</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-2">
-                {contentLength}/{CONTENT_MAX_LENGTH} 字
-              </span>
+          <div className="flex items-center justify-between px-6 py-3 border-b shrink-0">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setFullscreen(false)}
-                className="px-3 py-1.5 text-sm rounded-md border bg-background text-foreground hover:bg-accent transition-colors"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="退出全屏 (Esc)"
               >
-                退出全屏
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
+              <span className="text-xs font-medium text-muted-foreground select-none">源码</span>
+              <Switch checked={fsTab === 'preview'} onChange={(c) => setFsTab(c ? 'preview' : 'edit')} />
+              <span className={`text-xs font-medium select-none ${fsTab === 'preview' ? 'text-foreground' : 'text-muted-foreground'}`}>预览</span>
             </div>
+            <span className="text-xs text-muted-foreground">
+              {contentLength}/{CONTENT_MAX_LENGTH} 字
+            </span>
           </div>
-          <textarea
-            autoFocus
-            value={content}
-            onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
-            maxLength={CONTENT_MAX_LENGTH}
-            placeholder="# 开始写作...\n支持 Markdown 语法"
-            className={`flex-1 font-mono text-base md:text-lg p-6 w-full resize-none bg-transparent focus:outline-none border-none ${
-              contentLength >= CONTENT_MAX_ALERT ? 'text-red-500' : ''
-            }`}
-          />
+
+          {fsTab === 'edit' ? (
+            <textarea
+              autoFocus
+              value={content}
+              onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
+              maxLength={CONTENT_MAX_LENGTH}
+              placeholder="# 开始写作...\n支持 Markdown 语法"
+              className={`flex-1 font-mono text-base md:text-lg p-6 w-full resize-none bg-transparent focus:outline-none border-none ${
+                contentLength >= CONTENT_MAX_ALERT ? 'text-red-500' : ''
+              }`}
+            />
+          ) : (
+            <div className="flex-1 overflow-auto p-6">
+              <MarkdownPreview content={content || '暂无内容'} />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -29,7 +29,7 @@ export default async function EditPostPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col flex-1">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm">
           <Link href={`/posts/${post.slug}`} className="flex items-center gap-1">
