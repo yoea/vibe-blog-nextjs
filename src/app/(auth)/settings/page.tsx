@@ -2,6 +2,7 @@ import { getUserSettings } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { SettingsForm } from '@/components/settings/settings-form'
+import { isSuperAdmin } from '@/lib/utils/admin'
 
 export const metadata = {
   title: '设置',
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
   const { data: settings } = await getUserSettings(user.id)
   const displayName = settings?.display_name ?? user.email?.split('@')[0] ?? ''
   const avatarUrl = settings?.avatar_url ?? null
+  const isAdmin = await isSuperAdmin()
 
   return (
     <div className="space-y-6">
@@ -23,6 +25,7 @@ export default async function SettingsPage() {
         user={user}
         displayName={displayName}
         avatarUrl={avatarUrl}
+        isAdmin={isAdmin}
       />
     </div>
   )

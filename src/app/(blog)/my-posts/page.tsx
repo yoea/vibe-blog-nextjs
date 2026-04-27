@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AuthorCard } from '@/components/blog/author-card'
 import { PostListClient } from '@/components/blog/post-list-client'
 import { loadMoreMyPosts } from '@/lib/actions/post-actions'
+import { isSuperAdmin } from '@/lib/utils/admin'
 import { Calendar, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,7 @@ export default async function MyPostsPage() {
   const createdAt = user.created_at ?? null
 
   const { data: posts, count, error } = await getPostsByAuthor(user.id, 1, 10)
+  const isAdmin = await isSuperAdmin()
 
   return (
     <div className="space-y-6">
@@ -50,6 +52,7 @@ export default async function MyPostsPage() {
         userId={user.id}
         displayName={authorName}
         avatarUrl={authorAvatarUrl}
+        isAdmin={isAdmin}
         stats={[
           { icon: <Calendar className="h-3 w-3" />, label: `加入 ${createdAt ? formatDaysAgo(createdAt) : '-'}` },
           { icon: <FileText className="h-3 w-3" />, label: `${count ?? 0} 篇文章` },

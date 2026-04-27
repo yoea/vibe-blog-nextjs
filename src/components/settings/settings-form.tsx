@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Shield } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { updateUserSettings } from '@/lib/actions/settings-actions'
@@ -29,9 +30,10 @@ interface Props {
   user: User
   displayName: string
   avatarUrl: string | null
+  isAdmin?: boolean
 }
 
-export function SettingsForm({ user, displayName, avatarUrl }: Props) {
+export function SettingsForm({ user, displayName, avatarUrl, isAdmin }: Props) {
   const [name, setName] = useState(displayName)
   const [error, setError] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -104,6 +106,17 @@ export function SettingsForm({ user, displayName, avatarUrl }: Props) {
           <div className="space-y-2 text-sm">
             <InfoRow label="用户 ID" value={user.id} />
             <InfoRow label="邮箱" value={user.email ?? '-'} verified={!!user.email_confirmed_at} />
+            {isAdmin && (
+              <InfoRow
+                label="角色"
+                value={
+                  <span className="inline-flex items-center gap-1">
+                    <Shield className="h-3.5 w-3.5" />
+                    管理员
+                  </span>
+                }
+              />
+            )}
             <InfoRow label="手机号" value={user.phone || '未设置'} verified={!!user.phone_confirmed_at} />
             <InfoRow label="最后登录" value={formatDate(user.last_sign_in_at)} />
             <InfoRow label="注册时间" value={formatDate(user.created_at)} />
@@ -240,12 +253,16 @@ export function SettingsForm({ user, displayName, avatarUrl }: Props) {
   )
 }
 
-function InfoRow({ label, value, verified }: { label: string; value: string; verified?: boolean }) {
+function InfoRow({ label, value, verified }: { label: string; value: string | React.ReactNode; verified?: boolean }) {
   return (
     <div className="py-1">
       <span className="text-muted-foreground">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-xs break-all">{value}</span>
+        {typeof value === 'string' ? (
+          <span className="font-mono text-xs break-all">{value}</span>
+        ) : (
+          <span className="text-xs">{value}</span>
+        )}
         {verified !== undefined && (
           verified
             ? <span className="inline-flex items-center gap-0.5 text-xs text-green-600 shrink-0"><span className="text-green-500"> ✓</span>已验证</span>

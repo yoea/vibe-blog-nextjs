@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Shield } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 
 interface StatItem {
@@ -13,12 +14,14 @@ export function AuthorCard({
   avatarUrl,
   stats = [],
   actions,
+  isAdmin,
 }: {
   userId: string
   displayName: string
   avatarUrl?: string | null
   stats?: StatItem[]
   actions?: ReactNode
+  isAdmin?: boolean
 }) {
   return (
     <div className="flex items-center gap-4 p-4 rounded-lg border bg-card">
@@ -32,7 +35,15 @@ export function AuthorCard({
       <div className="space-y-1 flex-1">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">{displayName}</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              {displayName}
+              {isAdmin && (
+                <span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground/60 border rounded px-1.5 py-0.5">
+                  <Shield className="h-3 w-3" />
+                  管理员
+                </span>
+              )}
+            </h1>
             <p className="text-xs text-muted-foreground">ID: {userId.slice(0, 8)}</p>
           </div>
           {actions}
