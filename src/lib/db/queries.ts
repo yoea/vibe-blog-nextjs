@@ -60,14 +60,18 @@ export async function getPostBySlug(slug: string) {
     return { data: null, error: '文章不存在' }
   }
 
-  // Fetch author settings, like count, comment count, and user/IP like check in parallel
-  const [authorSettingsResult, { count: likeCount }, commentCountResult, userLikeResult] = await Promise.all([
+  // Fetch author settings, like count, comment count, user/IP like check, and draft in parallel
+  const [authorSettingsResult, { count: likeCount }, commentCountResult, userLikeResult, draftResult] = await Promise.all([
     supabase.from('user_settings').select('display_name, avatar_url').eq('user_id', post.author_id).maybeSingle(),
     supabase.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
     supabase.from('post_comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
     // For authenticated users, check their like
     user
       ? supabase.from('post_likes').select('id').eq('post_id', post.id).eq('user_id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Draft data (only for the post author)
+    user && user.id === post.author_id
+      ? supabase.from('post_drafts').select('title, content, excerpt, updated_at').eq('post_id', post.id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
@@ -101,6 +105,13 @@ export async function getPostBySlug(slug: string) {
     like_count: likeCount ?? 0,
     comment_count: commentCount,
     is_liked_by_current_user: !!userLikeResult?.data || ipLike,
+    // Attach draft data if the current user is the author
+    ...(draftResult?.data ? {
+      draft_title: draftResult.data.title,
+      draft_content: draftResult.data.content,
+      draft_excerpt: draftResult.data.excerpt,
+      draft_updated_at: draftResult.data.updated_at,
+    } : {}),
   } as unknown as PostWithAuthor
 
   return { data: result, error: null }

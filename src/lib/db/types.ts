@@ -67,3 +67,11 @@ export interface GuestbookMessageWithAuthor extends GuestbookMessage {
 
 /** Base result type for server actions — { error?: string } on failure, {} on success */
 export type ActionResult = { error?: string }
+
+/** Extended post data for the editor, includes cloud draft if one exists */
+export interface PostEditorData extends Post {
+  draft_title?: string
+  draft_content?: string
+  draft_excerpt?: string | null
+  draft_updated_at?: string | null
+}

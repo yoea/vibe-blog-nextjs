@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { MarkdownPreview } from '@/components/shared/markdown-preview'
 import { Separator } from '@/components/ui/separator'
 import { savePost } from '@/lib/actions/post-actions'
+import { useAutoSave, type AutoSaveStatus } from '@/lib/hooks/use-auto-save'
 import { useLocalDraft } from '@/lib/hooks/use-local-draft'
 import { toast } from 'sonner'
 import type { PostWithAuthor } from '@/lib/db/types'
@@ -24,10 +25,6 @@ export function PostEditor({ initialData }: Props) {
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const [fullscreen, setFullscreen] = useState(false)
   const [error, setError] = useState('')
-  const [title, setTitle] = useState(initialData?.title ?? '')
-  const [content, setContent] = useState(initialData?.content ?? '')
-  const [published, setPublished] = useState(initialData?.published ?? false)
-  const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? '')
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryCooldown, setSummaryCooldown] = useState(false)
   const [modelName, setModelName] = useState('')
@@ -35,16 +32,44 @@ export function PostEditor({ initialData }: Props) {
   const router = useRouter()
   const isEditing = !!initialData
 
+  // Post identity (for new posts, these start null and get set after first auto-save)
+  const [postId, setPostId] = useState<string | null>(initialData?.id ?? null)
+  const [slug, setSlug] = useState<string | null>(initialData?.slug ?? null)
+
+  // Editor state — prefer cloud draft over published data
+  const draftData = initialData && 'draft_title' in initialData
+    ? { title: (initialData as any).draft_title as string, content: (initialData as any).draft_content as string, excerpt: (initialData as any).draft_excerpt as string | null }
+    : null
+  const [title, setTitle] = useState(draftData?.title ?? initialData?.title ?? '')
+  const [content, setContent] = useState(draftData?.content ?? initialData?.content ?? '')
+  const [published, setPublished] = useState(initialData?.published ?? false)
+  const [excerpt, setExcerpt] = useState(draftData?.excerpt ?? initialData?.excerpt ?? '')
+
+  // Local draft recovery (for crash recovery, not active auto-save)
   const draftKey = isEditing && initialData ? `post_draft_${initialData.id}` : null
-  const { hasNewerDraft, timeAgo, save, clear, restore, discard } = useLocalDraft(draftKey, initialData)
+  const { hasNewerDraft, timeAgo, clear, restore, discard } = useLocalDraft(draftKey, initialData)
   const [showRecovery, setShowRecovery] = useState(false)
+
+  // Cloud auto-save
+  const { status: autoSaveStatus, retry } = useAutoSave({
+    postId,
+    title,
+    content,
+    excerpt,
+    onPostCreated: useCallback((newPostId: string, newSlug: string) => {
+      setPostId(newPostId)
+      setSlug(newSlug)
+      // Update the URL so refresh goes to the edit page
+      window.history.replaceState(null, '', `/posts-edit/${newSlug}`)
+    }, []),
+  })
 
   // hydration 后检测本地草稿，避免服务端/客户端 HTML 不匹配
   useEffect(() => {
     if (hasNewerDraft) setShowRecovery(true)
   }, [hasNewerDraft])
 
-  // 新建文章：静默恢复本地草稿
+  // 新建文章：静默恢复本地草稿（优先于云草稿）
   useEffect(() => {
     if (!isEditing) {
       const restored = restore()
@@ -110,7 +135,7 @@ export function PostEditor({ initialData }: Props) {
     }
 
     setTimeout(() => setSummaryCooldown(false), SUMMARY_COOLDOWN_MS)
-  }, [canGenerateSummary, content])
+  }, [canGenerateSummary, content, title])
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
@@ -121,6 +146,11 @@ export function PostEditor({ initialData }: Props) {
     formData.set('content', content)
     formData.set('excerpt', excerpt)
     formData.set('published', published ? 'on' : 'off')
+    // For new posts that have been auto-saved, pass the post ID
+    if (!isEditing && postId && slug) {
+      formData.set('_mode', 'update')
+      formData.set('_id', postId)
+    }
     const result = await savePost(formData)
     if (result.error) {
       setError(result.error)
@@ -128,6 +158,15 @@ export function PostEditor({ initialData }: Props) {
       clear()
       router.push('/my-posts')
       router.refresh()
+    }
+  }
+
+  const autoSaveLabel = (status: AutoSaveStatus): string | null => {
+    switch (status) {
+      case 'saving': return '保存中...'
+      case 'saved': return '已自动保存'
+      case 'error': return '保存失败'
+      default: return null
     }
   }
 
@@ -174,7 +213,6 @@ export function PostEditor({ initialData }: Props) {
             name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => save({ title, content, excerpt, published })}
             placeholder="文章标题"
             className="w-full px-3 py-2 rounded-md border bg-transparent text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
@@ -207,7 +245,6 @@ export function PostEditor({ initialData }: Props) {
               id="excerpt"
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value.slice(0, SUMMARY_MAX_LENGTH))}
-              onBlur={() => save({ title, content, excerpt, published })}
               placeholder="一句话概括文章..."
               maxLength={SUMMARY_MAX_LENGTH}
               rows={2}
@@ -226,10 +263,7 @@ export function PostEditor({ initialData }: Props) {
             <span className="text-sm text-muted-foreground">源码</span>
             <button
               type="button"
-              onClick={() => {
-                save({ title, content, excerpt, published })
-                setTab(tab === 'edit' ? 'preview' : 'edit')
-              }}
+              onClick={() => setTab(tab === 'edit' ? 'preview' : 'edit')}
               className={`relative w-11 h-6 rounded-full transition-colors ${
                 tab === 'preview' ? 'bg-primary' : 'bg-gray-300'
               }`}
@@ -250,7 +284,6 @@ export function PostEditor({ initialData }: Props) {
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
-                onBlur={() => save({ title, content, excerpt, published })}
                 maxLength={CONTENT_MAX_LENGTH}
                 placeholder="# 开始写作...\n支持 Markdown 语法"
                 className={`font-mono text-base md:text-sm p-4 h-[300px] w-full resize-none rounded-md border bg-transparent focus:outline-none focus:ring-2 ${
@@ -284,7 +317,7 @@ export function PostEditor({ initialData }: Props) {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex items-center gap-3">
-          <SubmitButton isEditing={isEditing} />
+          <SubmitButton isEditing={isEditing || !!postId} />
           <span className="text-sm text-muted-foreground">公开状态</span>
           <label className="inline-flex items-center cursor-pointer gap-2">
             <input
@@ -302,12 +335,34 @@ export function PostEditor({ initialData }: Props) {
             </span>
           </label>
         </div>
-        <p className="text-xs text-muted-foreground/70 mt-1">
-          {published
-            ? '公开发布后，所有人都能查看和评论这篇文章'
-            : '私密文章仅你自己可见，其他人无法访问'
-          }
-        </p>
+        <div className="flex items-center gap-3 text-xs">
+          <p className="text-muted-foreground/70">
+            {published
+              ? '公开发布后，所有人都能查看和评论这篇文章'
+              : '私密文章仅你自己可见，其他人无法访问'
+            }
+          </p>
+          <span className="ml-auto inline-flex items-center gap-1.5">
+            {autoSaveStatus !== 'idle' && (
+              <>
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${
+                  autoSaveStatus === 'saving' ? 'bg-muted-foreground/50' :
+                  autoSaveStatus === 'saved' ? 'bg-green-500' : 'bg-red-500'
+                }`} />
+                <span className={`${
+                  autoSaveStatus === 'error' ? 'text-red-500' : 'text-muted-foreground'
+                }`}>
+                  {autoSaveLabel(autoSaveStatus)}
+                </span>
+                {autoSaveStatus === 'error' && (
+                  <button type="button" onClick={retry} className="underline hover:text-foreground cursor-pointer">
+                    重试
+                  </button>
+                )}
+              </>
+            )}
+          </span>
+        </div>
       </form>
 
       {fullscreen && (
@@ -331,7 +386,6 @@ export function PostEditor({ initialData }: Props) {
             autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
-            onBlur={() => save({ title, content, excerpt, published })}
             maxLength={CONTENT_MAX_LENGTH}
             placeholder="# 开始写作...\n支持 Markdown 语法"
             className={`flex-1 font-mono text-base md:text-lg p-6 w-full resize-none bg-transparent focus:outline-none border-none ${
