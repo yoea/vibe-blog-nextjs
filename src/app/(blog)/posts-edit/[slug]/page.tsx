@@ -1,6 +1,7 @@
 import { getPostBySlug } from '@/lib/db/queries'
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
+import { connection } from 'next/server'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,6 +14,7 @@ interface PageProps {
 
 export default async function EditPostPage({ params }: PageProps) {
   const { slug } = await params
+  await connection()
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -29,8 +31,8 @@ export default async function EditPostPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6 flex flex-col flex-1">
-      <div className="flex items-center gap-2">
+    <div className="space-y-6 flex flex-col flex-1 min-h-0">
+      <div className="flex items-center gap-2 shrink-0">
         <Button variant="ghost" size="sm">
           <Link href={`/posts/${post.slug}`} className="flex items-center gap-1">
             <ArrowLeft className="h-4 w-4" />

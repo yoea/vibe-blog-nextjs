@@ -52,6 +52,14 @@ export function PostEditor({ initialData }: Props) {
       : []
   )
   const [tagInput, setTagInput] = useState('')
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+
+  const autoGrow = useCallback(() => {
+    const el = contentRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = el.scrollHeight + 120 + 'px'
+  }, [])
 
   // Cloud auto-save
   const { status: autoSaveStatus, countdown, hasContent, needsSave, retry } = useAutoSave({
@@ -66,6 +74,10 @@ export function PostEditor({ initialData }: Props) {
       window.history.replaceState(null, '', `/posts-edit/${newSlug}`)
     }, []),
   })
+
+  useEffect(() => {
+    autoGrow()
+  }, [content, tab, autoGrow])
 
   useEffect(() => {
     fetch('/api/generate-summary')
@@ -146,6 +158,7 @@ export function PostEditor({ initialData }: Props) {
     formData.set('excerpt', excerpt)
     formData.set('published', published ? 'on' : 'off')
     formData.set('tags', JSON.stringify(tags))
+    formData.set('_slug', slug ?? initialData?.slug ?? '')
     // For new posts that have been auto-saved, pass the post ID
     if (!isEditing && postId && slug) {
       formData.set('_mode', 'update')
@@ -161,12 +174,12 @@ export function PostEditor({ initialData }: Props) {
   }
 
   return (
-    <div className="flex flex-col flex-1 gap-6">
-      <form onSubmit={handleSubmit} method="post" className="flex flex-col flex-1 gap-4" noValidate>
+    <div className="flex flex-col flex-1 gap-6 min-h-0">
+      <form onSubmit={handleSubmit} method="post" className="flex flex-col flex-1 gap-4 min-h-0" noValidate>
         {isEditing && <input type="hidden" name="_mode" value="update" />}
         {isEditing && <input type="hidden" name="_id" value={initialData.id} />}
 
-        <div className="space-y-2">
+        <div className="space-y-2 shrink-0">
           <label htmlFor="title" className="block text-sm font-medium">标题</label>
           <input
             id="title"
@@ -178,7 +191,7 @@ export function PostEditor({ initialData }: Props) {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 shrink-0">
           <label htmlFor="excerpt" className="block text-sm font-medium">摘要</label>
           {modelName && <p className="text-xs text-muted-foreground">正文字数超100字后，可点击下方按钮由 <code className="font-mono">{modelName}</code> 总结摘要</p>}
           <div className="relative">
@@ -228,7 +241,7 @@ export function PostEditor({ initialData }: Props) {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 shrink-0">
           <label className="block text-sm font-medium">标签</label>
           <p className="text-xs text-muted-foreground">按 Enter 添加标签，最多 5 个</p>
           <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-transparent min-h-[2.25rem] focus-within:ring-2 focus-within:ring-ring">
@@ -268,23 +281,40 @@ export function PostEditor({ initialData }: Props) {
 
         <Separator />
 
-        <div className="flex flex-col flex-1 gap-4">
+        <div className="flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             <span className={`text-xs font-medium ${tab === 'edit' ? 'text-foreground' : 'text-muted-foreground'}`}>源码</span>
             <Switch checked={tab === 'preview'} onChange={(c) => setTab(c ? 'preview' : 'edit')} />
             <span className={`text-xs font-medium ${tab === 'preview' ? 'text-foreground' : 'text-muted-foreground'}`}>预览</span>
           </div>
+          <div className="flex items-center gap-3">
+            <SubmitButton isEditing={isEditing || !!postId} isAutoGenerating={isAutoGenerating} />
+            <AutoSaveIndicator status={autoSaveStatus} countdown={countdown} hasContent={hasContent} needsSave={needsSave} onRetry={retry} />
+            <label className="flex flex-col items-end gap-0 cursor-pointer">
+              <span className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground select-none">
+                  {published ? '公开' : '私密'}
+                </span>
+                <input type="hidden" name="published" value={published ? 'on' : 'off'} />
+                <Switch checked={published} onChange={setPublished} />
+              </span>
+            </label>
+          </div>
+        </div>
 
+        <div className="flex flex-col flex-1 gap-4 min-h-0">
           {tab === 'edit' ? (
-            <>
-              <div className="relative flex-1 min-h-0">
+            <div className="relative">
               <textarea
+                ref={contentRef}
                 id="content"
                 value={content}
-                onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))}
+                onChange={(e) => {
+                  setContent(e.target.value.slice(0, CONTENT_MAX_LENGTH))
+                }}
                 maxLength={CONTENT_MAX_LENGTH}
                 placeholder="# 开始写作...\n支持 Markdown 语法"
-                className={`font-mono text-base md:text-sm p-4 w-full resize-y rounded-md border bg-transparent focus:outline-none focus:ring-2 absolute inset-0 ${
+                className={`font-mono text-base md:text-sm p-4 w-full rounded-md border bg-muted/60 focus:outline-none focus:ring-2 overflow-hidden resize-none ${
                 contentLength >= CONTENT_MAX_ALERT
                   ? 'focus:ring-red-500 border-red-400'
                   : 'focus:ring-ring border-transparent'
@@ -293,18 +323,17 @@ export function PostEditor({ initialData }: Props) {
               <button
                 type="button"
                 onClick={() => setFullscreen(true)}
-                className="absolute -top-8 right-0 p-1.5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="absolute top-1.5 right-1.5 p-1.5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
                 title="全屏编辑"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               </button>
-              <p className={`absolute bottom-2 right-3 text-xs pointer-events-none select-none ${
+              <p className={`absolute bottom-2 right-3 text-xs pointer-events-none select-none z-10 ${
                 contentLength >= CONTENT_MAX_ALERT ? 'text-red-500' : 'text-muted-foreground'
               }`}>
                 {contentLength}/{CONTENT_MAX_LENGTH} 字
               </p>
             </div>
-            </>
           ) : (
             <div className="border rounded-lg p-6 overflow-auto flex-1 min-h-[200px] bg-card">
               <MarkdownPreview content={content || '暂无内容'} />
@@ -313,39 +342,12 @@ export function PostEditor({ initialData }: Props) {
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3">
-          <SubmitButton isEditing={isEditing || !!postId} isAutoGenerating={isAutoGenerating} />
-
-          <AutoSaveIndicator status={autoSaveStatus} countdown={countdown} hasContent={hasContent} needsSave={needsSave} onRetry={retry} />
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs font-medium text-muted-foreground select-none">
-              {published ? '公开' : '私密'}
-            </span>
-            <input type="hidden" name="published" value={published ? 'on' : 'off'} />
-            <Switch checked={published} onChange={setPublished} />
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground/70">
-          {published
-            ? '公开发布后，所有人都能查看和评论这篇文章'
-            : '私密文章仅你自己可见，其他人无法访问'}
-        </p>
       </form>
 
       {fullscreen && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col">
           <div className="flex items-center justify-between px-6 py-3 border-b shrink-0">
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setFullscreen(false)}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                title="退出全屏 (Esc)"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-              </button>
               <span className="text-xs font-medium text-muted-foreground select-none">源码</span>
               <Switch checked={fsTab === 'preview'} onChange={(c) => setFsTab(c ? 'preview' : 'edit')} />
               <span className={`text-xs font-medium select-none ${fsTab === 'preview' ? 'text-foreground' : 'text-muted-foreground'}`}>预览</span>
@@ -355,6 +357,14 @@ export function PostEditor({ initialData }: Props) {
               <span className="text-xs text-muted-foreground">
                 {contentLength}/{CONTENT_MAX_LENGTH} 字
               </span>
+              <button
+                type="button"
+                onClick={() => setFullscreen(false)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="退出全屏 (Esc)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              </button>
             </div>
           </div>
 
@@ -426,7 +436,7 @@ function AutoSaveIndicator({ status, countdown, hasContent, needsSave, onRetry }
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/50">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-        已保存
+        已暂存草稿
       </span>
     )
   }
@@ -435,11 +445,11 @@ function AutoSaveIndicator({ status, countdown, hasContent, needsSave, onRetry }
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
-        {countdown}秒后自动保存
+        {countdown}秒后自动暂存草稿
       </span>
     )
   }
-  const label = status === 'saving' ? '保存中...' : status === 'saved' ? '已自动保存' : '保存失败'
+  const label = status === 'saving' ? '暂存草稿中...' : status === 'saved' ? '已自动暂存草稿' : '暂存草稿失败'
   const dotColor = status === 'saving' ? 'bg-muted-foreground/50' : status === 'saved' ? 'bg-green-500' : 'bg-red-500'
   const textColor = status === 'error' ? 'text-red-500' : 'text-muted-foreground'
   return (

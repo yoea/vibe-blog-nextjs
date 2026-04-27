@@ -27,7 +27,7 @@ interface PostData {
   excerpt?: string | null
   like_count?: number
   comment_count?: number
-  tags?: { id: string; name: string; slug: string }[]
+  tags?: { id: string; name: string; slug: string; color?: string }[]
 }
 
 export function MyPostRowList({
@@ -177,7 +177,8 @@ function CompactPostRow({ post, onDelete }: { post: PostData; onDelete: (id: str
                 <Link
                   key={tag.slug}
                   href={`/tags/${tag.slug}`}
-                  className="text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground hover:text-primary hover:bg-muted/80 transition-colors"
+                  className="text-[10px] px-1 py-0.5 rounded hover:opacity-80 transition-opacity"
+                  style={{ color: tag.color ?? '#3B82F6', backgroundColor: (tag.color ?? '#3B82F6') + '18' }}
                 >
                   {tag.name}
                 </Link>
