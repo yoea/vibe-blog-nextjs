@@ -10,8 +10,8 @@ export default async function NewPostPage() {
   if (!user) redirect('/login?redirect=/posts/new')
 
   return (
-    <div className="space-y-6 flex flex-col flex-1">
-      <h1 className="text-3xl font-bold">写新文章</h1>
+    <div className="space-y-6 flex flex-col flex-1 min-h-0">
+      <h1 className="text-3xl font-bold shrink-0">写新文章</h1>
       <PostEditor />
     </div>
   )

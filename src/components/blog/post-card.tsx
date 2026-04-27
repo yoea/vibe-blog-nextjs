@@ -29,7 +29,7 @@ interface PostCardData {
   like_count?: number
   comment_count?: number
   author?: { email?: string | null; name?: string | null; avatar_url?: string | null } | null
-  tags?: { id: string; name: string; slug: string }[]
+  tags?: { id: string; name: string; slug: string; color?: string }[]
 }
 
 export function PostCard({ post, showActions }: { post: PostCardData; showActions?: boolean }) {
@@ -127,7 +127,8 @@ export function PostCard({ post, showActions }: { post: PostCardData; showAction
                   <Link
                     key={tag.slug}
                     href={`/tags/${tag.slug}`}
-                    className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground hover:text-primary hover:bg-muted/80 transition-colors"
+                    className="text-xs px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
+                    style={{ color: tag.color ?? '#3B82F6', backgroundColor: (tag.color ?? '#3B82F6') + '18' }}
                   >
                     {tag.name}
                   </Link>
@@ -179,7 +180,7 @@ export function PostCard({ post, showActions }: { post: PostCardData; showAction
 
   // Public list layout
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow gap-2">
       <CardHeader className="pb-2">
         <div className="flex items-start gap-2">
           <Link href={`/posts/${post.slug}`} className="block min-w-0 flex-1 hover:text-primary transition-colors">
@@ -200,7 +201,8 @@ export function PostCard({ post, showActions }: { post: PostCardData; showAction
               <Link
                 key={tag.slug}
                 href={`/tags/${tag.slug}`}
-                className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground hover:text-primary hover:bg-muted/80 transition-colors"
+                className="text-xs px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
+                style={{ color: tag.color ?? '#3B82F6', backgroundColor: (tag.color ?? '#3B82F6') + '18' }}
               >
                 {tag.name}
               </Link>

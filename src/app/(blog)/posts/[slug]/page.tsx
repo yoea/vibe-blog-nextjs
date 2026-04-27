@@ -59,7 +59,7 @@ export default async function PostPage({ params }: PageProps) {
       </Button>
 
       <article>
-        <header className="space-y-3">
+        <header className="space-y-4 pb-4">
           <h1 className="text-3xl font-bold leading-tight">{post.title}</h1>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-4">
@@ -94,7 +94,8 @@ export default async function PostPage({ params }: PageProps) {
                 <Link
                   key={tag.slug}
                   href={`/tags/${tag.slug}`}
-                  className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground hover:text-primary hover:bg-muted/80 transition-colors"
+                  className="text-xs px-2 py-0.5 rounded hover:opacity-80 transition-opacity"
+                  style={{ color: tag.color ?? '#3B82F6', backgroundColor: (tag.color ?? '#3B82F6') + '18' }}
                 >
                   {tag.name}
                 </Link>

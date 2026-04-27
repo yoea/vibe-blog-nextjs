@@ -170,8 +170,16 @@ create table if not exists tags (
   id uuid default gen_random_uuid() primary key,
   name varchar(50) not null,
   slug varchar(100) unique not null,
+  color varchar(7) default '#3B82F6',
   created_at timestamptz default now()
 );
+
+-- Add color column if upgrading from a previous version
+do $$ begin
+  if not exists (select 1 from information_schema.columns where table_name = 'tags' and column_name = 'color') then
+    alter table tags add column color varchar(7) default '#3B82F6';
+  end if;
+end $$;
 
 create table if not exists post_tags (
   id uuid default gen_random_uuid() primary key,

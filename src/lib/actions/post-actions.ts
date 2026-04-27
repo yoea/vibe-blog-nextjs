@@ -33,7 +33,11 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
       .eq('author_id', user.id)
     if (error) return { error: error.message }
     // Update tags
-    await savePostTags(postId, tags)
+    const tagError = await savePostTags(supabase, postId, tags)
+    if (tagError) return { error: tagError }
+    // Revalidate all relevant paths
+    const slug = formData.get('_slug') as string | null
+    if (slug) revalidatePath(`/posts-edit/${slug}`)
     revalidatePath('/')
     revalidatePath('/profile')
     return {}
@@ -49,19 +53,20 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
     }
 
     const id = crypto.randomUUID()
-    const slug = id.slice(0, 8)
+    const slugId = id.slice(0, 8)
     const { error } = await supabase.from('posts').insert({
       id,
       author_id: user.id,
       title,
-      slug,
+      slug: slugId,
       content,
       excerpt,
       published,
     })
     if (error) return { error: error.message }
     // Save tags
-    await savePostTags(id, tags)
+    const tagError = await savePostTags(supabase, id, tags)
+    if (tagError) return { error: tagError }
     revalidatePath('/')
     revalidatePath('/profile')
     return {}
@@ -69,15 +74,28 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
 }
 
 /**
- * Upsert tags for a post: create any new tags, then replace all post_tags.
+ * Return a random hex color from a curated palette that works in both themes.
  */
-async function savePostTags(postId: string, tagNames: string[]) {
-  const supabase = await createClient()
+function randomTagColor(): string {
+  const palette = [
+    '#3B82F6', '#22C55E', '#A855F7', '#EC4899',
+    '#F97316', '#14B8A6', '#EF4444', '#6366F1',
+    '#EAB308', '#06B6D4', '#84CC16', '#F43F5E',
+    '#8B5CF6', '#0EA5E9',
+  ]
+  return palette[Math.floor(Math.random() * palette.length)]
+}
 
+/**
+ * Upsert tags for a post: create any new tags, then replace all post_tags.
+ * Returns an error message on failure, or null on success.
+ */
+async function savePostTags(supabase: Awaited<ReturnType<typeof createClient>>, postId: string, tagNames: string[]): Promise<string | null> {
   if (tagNames.length === 0) {
     // Remove all tags from this post
-    await supabase.from('post_tags').delete().eq('post_id', postId)
-    return
+    const { error } = await supabase.from('post_tags').delete().eq('post_id', postId)
+    if (error) return `清除标签失败: ${error.message}`
+    return null
   }
 
   // Find or create each tag
@@ -93,30 +111,36 @@ async function savePostTags(postId: string, tagNames: string[]) {
     // Try to find existing tag
     const { data: existing } = await supabase
       .from('tags')
-      .select('id')
+      .select('id, color')
       .eq('slug', slug)
       .maybeSingle()
 
     if (existing) {
       tagIds.push(existing.id)
     } else {
-      // Create new tag
-      const { data: newTag } = await supabase
+      // Create new tag with a random color
+      const { data: newTag, error: createError } = await supabase
         .from('tags')
-        .insert({ name: trimmed, slug })
+        .insert({ name: trimmed, slug, color: randomTagColor() })
         .select('id')
         .single()
+      if (createError) return `创建标签「${trimmed}」失败: ${createError.message}`
       if (newTag) tagIds.push(newTag.id)
     }
   }
 
   // Replace all post_tags for this post
   if (tagIds.length > 0) {
-    await supabase.from('post_tags').delete().eq('post_id', postId)
-    await supabase.from('post_tags').insert(
+    const { error: deleteError } = await supabase.from('post_tags').delete().eq('post_id', postId)
+    if (deleteError) return `清除旧标签失败: ${deleteError.message}`
+
+    const { error: insertError } = await supabase.from('post_tags').insert(
       tagIds.map((tagId) => ({ post_id: postId, tag_id: tagId }))
     )
+    if (insertError) return `保存标签失败: ${insertError.message}`
   }
+
+  return null
 }
 
 export async function deletePost(postId: string): Promise<ActionResult> {
