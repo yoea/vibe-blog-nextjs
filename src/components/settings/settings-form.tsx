@@ -139,6 +139,12 @@ export function SettingsForm({ user, isAdmin }: Props) {
         </CardContent>
       </Card>
 
+      <p className="text-xs text-muted-foreground text-center">
+        {process.env.NEXT_PUBLIC_BUILD_TIME
+          ? `构建于 ${new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString('zh-CN')}`
+          : '开发模式'}
+      </p>
+
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>
