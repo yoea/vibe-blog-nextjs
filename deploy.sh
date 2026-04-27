@@ -62,17 +62,13 @@ else
   echo "跳过 build"
 fi
 # =========================
-# 5. PM2 处理（重点优化）
+# 5. PM2 处理 — 总是删除旧进程重新创建
 # =========================
-echo "检查 PM2 服务..."
+echo "停止旧 PM2 服务（如有）..."
+pm2 delete "$PM2_NAME" 2>/dev/null || true
 
-if pm2 list | grep -q "$PM2_NAME"; then
-  echo "PM2 已存在，重载服务..."
-  pm2 reload ecosystem.config.js
-else
-  echo "PM2 不存在，创建新服务..."
-  pm2 start ecosystem.config.js
-fi
+echo "创建新 PM2 服务..."
+pm2 start ecosystem.config.js
 
 # 保存 PM2 状态（防重启丢失）
 pm2 save
@@ -80,22 +76,23 @@ pm2 save
 # =========================
 # 6. 健康检查（带超时）
 # =========================
-echo "健康检查: $SITE_URL"
-
+echo "健康检查..."
 sleep 5
 
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  --connect-timeout 5 \
-  --max-time 10 \
-  "$SITE_URL" || echo "000")
+check_url() {
+  local url=$1
+  local name=$2
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 --max-time 10 "$url" || echo "000")
+  if [[ "$code" != "200" ]]; then
+    echo "❌ $name 异常 (HTTP $code)"
+    pm2 logs "$PM2_NAME" --lines 20
+    exit 1
+  fi
+  echo "  ✓ $name (HTTP $code)"
+}
 
-if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "301" || "$HTTP_CODE" == "302" ]]; then
-  echo "页面正常 (HTTP $HTTP_CODE)"
-else
-  echo "❌ 页面异常 (HTTP $HTTP_CODE)"
-  echo "查看 PM2 日志："
-  pm2 logs "$PM2_NAME" --lines 20
-  exit 1
-fi
+check_url "$SITE_URL" "首页"
+check_url "${SITE_URL}/logo.svg" "静态资源 logo.svg"
 
 echo "=== 部署完成 ==="
