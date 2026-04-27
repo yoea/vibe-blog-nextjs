@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { CommentForm } from './comment-form'
 import Link from 'next/link'
 import { MessageCircle, Trash2 } from 'lucide-react'
@@ -49,8 +49,6 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
   canDelete?: boolean
   children?: ReactNode
 }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
   const [showConfirm, setShowConfirm] = useState(false)
 
   const isReplyActive = replyTarget === item.id
@@ -97,7 +95,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
                 <span className="shrink-0 text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground">游客</span>
               )}
             </div>
-            <span className="shrink-0 ml-2">{mounted ? formatTimeAgo(item.created_at) : ''}</span>
+            <span className="shrink-0 ml-2" suppressHydrationWarning>{formatTimeAgo(item.created_at)}</span>
           </div>
           <p className="text-sm whitespace-pre-wrap break-words">{item.content}</p>
 
