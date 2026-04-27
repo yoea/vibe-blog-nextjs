@@ -26,13 +26,11 @@ export function CommentForm({
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [isMac, setIsMac] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setIsMac(navigator.platform.includes('Mac'))
     const saved = localStorage.getItem('guest_name')
     if (saved) setGuestName(saved)
-    setMounted(true)
   }, [])
 
   const handleSubmit = async (e?: { preventDefault?: () => void }) => {
@@ -64,11 +62,9 @@ export function CommentForm({
       )}
       {!currentUserId && (
         <div className="space-y-1">
-          {mounted && (
-            <label className="text-[11px] text-muted-foreground">
-              昵称（设置后将自动保存）
-            </label>
-          )}
+          <label className="text-[11px] text-muted-foreground">
+            昵称（设置后将自动保存）
+          </label>
           <input
             type="text"
             value={guestName}
@@ -98,7 +94,7 @@ export function CommentForm({
         {error ? (
           <p className="text-sm text-destructive">{error}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
             键入评论后按 {isMac ? 'Cmd' : 'Ctrl'}+Enter 发送
           </p>
         )}
