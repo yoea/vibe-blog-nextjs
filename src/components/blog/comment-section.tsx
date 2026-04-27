@@ -88,9 +88,8 @@ export function CommentSection({
                 deleteTitle="删除评论"
                 deleteDescription="确定删除这条评论？此操作不可撤销。"
                 canDelete={!!currentUserId && (currentUserId === comment.author_id || currentUserId === postAuthorId)}
-              >
-                <LikeButton comment={comment} currentUserId={currentUserId} />
-              </ThreadedItemRenderer>
+                renderActions={(item) => <LikeButton comment={item as CommentWithAuthor} currentUserId={currentUserId} />}
+              />
             </div>
           ))}
         </div>
