@@ -22,6 +22,8 @@ export function ProgressBar() {
       const href = anchor.getAttribute('href')
       if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return
       if (!href.startsWith('/') && !href.startsWith(window.location.origin)) return
+      // 如果目标路由就是当前路由，不启动进度条（避免卡死）
+      if (anchor.pathname + anchor.search === window.location.pathname + window.location.search) return
       nprogress.start()
     }
 
