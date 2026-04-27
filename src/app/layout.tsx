@@ -60,11 +60,11 @@ export default async function RootLayout({
 
   return (
     <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable} antialiased${initialDark ? ' dark' : ''}`} suppressHydrationWarning>
-      <body className="flex flex-col bg-background" suppressHydrationWarning>
+      <body className="flex flex-col bg-background min-h-screen" suppressHydrationWarning>
         <ThemeProvider>
           <ProgressBar />
           <Header siteTitle={siteTitle} />
-          <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">{children}</main>
+          <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col">{children}</main>
           <Footer />
           <Toaster position="top-center" richColors />
         </ThemeProvider>
