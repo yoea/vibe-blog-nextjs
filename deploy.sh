@@ -26,20 +26,38 @@ git stash push -u -m "deploy stash" || true
 git fetch origin main
 git reset --hard origin/main
 
-echo "代码更新完成"
+echo "代码更新完成，检测代码变更..."
 
+CHANGED_FILES=$(git diff --name-only HEAD@{1} HEAD || true)
+
+echo "$CHANGED_FILES"
 # =========================
 # 3. 安装依赖（避免卡死）
 # =========================
-echo "安装依赖..."
-npm ci --no-audit --no-fund
+NEED_INSTALL=false
+
+if echo "$CHANGED_FILES" | grep -E "package-lock.json|package.json|pnpm-lock.yaml"; then
+  NEED_INSTALL=true
+fi
+
+if [ "$NEED_INSTALL" = true ]; then
+  echo "依赖变化，执行 npm ci..."
+  npm ci --no-audit --no-fund --prefer-offline
+else
+  echo "跳过 npm ci（无依赖变化）"
+fi
 
 # =========================
 # 4. 构建（失败直接退出）
 # =========================
 echo "构建项目..."
-npm run build
-
+if [ ! -f .next/BUILD_STAMP ] || find src app pages -newer .next/BUILD_STAMP | grep -q .; then
+  echo "需要重新构建"
+  npm run build
+  touch .next/BUILD_STAMP
+else
+  echo "跳过 build"
+fi
 # =========================
 # 5. PM2 处理（重点优化）
 # =========================
