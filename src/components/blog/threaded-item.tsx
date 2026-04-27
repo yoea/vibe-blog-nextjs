@@ -35,6 +35,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
   deleteDescription = '确定删除？此操作不可撤销。',
   canDelete,
   children,
+  renderActions,
 }: {
   item: T
   currentUserId: string | null
@@ -48,6 +49,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
   deleteDescription?: string
   canDelete?: boolean
   children?: ReactNode
+  renderActions?: (item: T) => ReactNode
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
 
@@ -100,7 +102,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
           <p className="text-sm whitespace-pre-wrap break-words">{item.content}</p>
 
           <div className="flex items-center gap-3 pt-1">
-            {children}
+            {renderActions ? renderActions(item) : children}
             {onReply && (
               <button
                 onClick={() => onReply(item.id)}
@@ -152,7 +154,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
               deleteTitle={deleteTitle}
               deleteDescription={deleteDescription}
               canDelete={canDelete}
-              children={children}
+              renderActions={renderActions}
             />
           ))}
         </div>
