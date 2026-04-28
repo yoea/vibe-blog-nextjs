@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, FileText, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { linkRefAuthor } from '@/lib/constants'
 import { formatDaysAgo } from '@/lib/utils/time'
 import type { Metadata } from 'next'
 import type { PostWithAuthor } from '@/lib/db/types'
@@ -113,7 +114,7 @@ export default async function AuthorPage({ params }: PageProps) {
       {postsWithAuthor.length > 0 ? (
         <div className="grid gap-4">
           {postsWithAuthor.map((post) => (
-            <PostCard key={post.id} post={post} linkRef={`author:${authorName}`} />
+            <PostCard key={post.id} post={post} linkRef={linkRefAuthor(authorName)} />
           ))}
         </div>
       ) : (

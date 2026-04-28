@@ -1,6 +1,7 @@
 import { getPostsByTag } from '@/lib/db/queries'
 import { loadMorePostsByTag } from '@/lib/actions/post-actions'
 import { PostListClient } from '@/components/blog/post-list-client'
+import { linkRefTag } from '@/lib/constants'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
@@ -43,7 +44,7 @@ export default async function TagPage({ params }: PageProps) {
         initialTotal={count ?? 0}
         onLoadMore={loadMorePostsByTag.bind(null, slug)}
         loadedAllText="已加载全部文章"
-        linkRef={`tag:${tagName}`}
+        linkRef={linkRefTag(tagName)}
       />
     </div>
   )
