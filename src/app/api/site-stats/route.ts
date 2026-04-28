@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.type === 'like') {
-      // Validate timestamp: must be within last 10 seconds
+      // Validate timestamp: must be within last 60 seconds
       const clientTs = Number(body.ts)
-      if (!clientTs || Date.now() - clientTs > 10000 || Date.now() - clientTs < 0) {
+      if (!clientTs || Date.now() - clientTs > 60000 || Date.now() - clientTs < 0) {
         return NextResponse.json({ error: 'invalid timestamp' }, { status: 400 })
       }
 
