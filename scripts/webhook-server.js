@@ -29,6 +29,17 @@ const SECRET = process.env.WEBHOOK_SECRET || null
 const DEPLOY_DIR = '/home/ewing/craft/vibe_blog_next'
 let currentDeploy = null // 追踪当前部署进程
 
+function pullOnly() {
+  const proc = spawn('git', ['pull'], { cwd: DEPLOY_DIR, stdio: 'inherit' })
+  proc.on('exit', (code) => {
+    if (code === 0) {
+      console.log(`[${new Date().toISOString()}] 代码已更新至最新`)
+    } else {
+      console.error(`[${new Date().toISOString()}] git pull 失败 (exit ${code})`)
+    }
+  })
+}
+
 function runDeploy() {
   // 如果已有部署在跑，杀掉整个进程组（包括所有子进程）
   if (currentDeploy) {
@@ -113,10 +124,10 @@ const server = http.createServer((req, res) => {
       },
     }))
 
-    // 仅标签推送触发部署（对应 /gitpush release 的发版流程）
-    // 普通分支推送只确认收到，不执行部署
+    // 分支推送只拉取代码，不发版不部署
     if (!isTagPush) {
-      console.log(`[${new Date().toISOString()}] 此次为分支推送，不会执行部署脚本（ref=${ref}）`)
+      console.log(`[${new Date().toISOString()}] 分支推送，仅拉取代码（ref=${ref}）`)
+      pullOnly()
       return
     }
 
