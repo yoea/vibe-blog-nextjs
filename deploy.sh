@@ -46,19 +46,16 @@ cp -r .next/static/. .next/standalone/.next/static/
 # 5. PM2 处理 — 启动新版本
 # =========================
 echo "启动新版本..."
-pm2 start ecosystem.config.js --only "$PM2_NAME"
+pm2 start ecosystem.config.js
 
 # 保存 PM2 状态（防重启丢失）
 pm2 save
 
-# 配置 PM2 开机自启（systemd）
-if command -v systemctl &>/dev/null; then
-  if ! find /etc/systemd/system -maxdepth 1 -name 'pm2-*.service' 2>/dev/null | grep -q .; then
-    echo "配置 PM2 开机自启..."
-    sudo pm2 startup systemd -u "$(whoami)" --hp "$HOME" 2>/dev/null && \
-      echo "  ✓ 开机自启已配置" || \
-      echo "  ⚠️ 自动配置失败，请手动执行：sudo pm2 startup systemd -u $(whoami) --hp $HOME"
-  fi
+# 配置 @reboot crontab 实现开机自启（无需 systemd）
+if ! crontab -l 2>/dev/null | grep -q 'pm2 resurrect'; then
+  echo "配置 crontab 开机自启..."
+  (crontab -l 2>/dev/null; echo '@reboot cd /home/ewing/craft/vibe_blog_next && pm2 resurrect') | crontab -
+  echo "  ✓ crontab 开机自启已配置"
 fi
 
 # =========================
