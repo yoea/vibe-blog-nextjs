@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.2](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.1...v0.1.2) (2026-04-28)
+
+
+### 新功能
+
+* 评论/留言系统重构 - 统一1级嵌套 ([40415b6](https://github.com/yoea/vibe-blog-nextjs/commit/40415b6d18f225bbfa7afa6bbff82a3ae8780d5d))
+
+
+### Bug 修复
+
+* 回复折叠优化，仅折叠超出1条的回复 ([7544259](https://github.com/yoea/vibe-blog-nextjs/commit/75442595de6750c93d6c255aa3d6436f0129a12c))
+* 移动端首页点赞超时 - 放宽 timestamp 校验窗口至60秒 ([aa0aacf](https://github.com/yoea/vibe-blog-nextjs/commit/aa0aacf34236b93442a3794e70f449fb2a09ec2b))
+
 ### [0.1.1](https://github.com/yoea/vibe-blog-nextjs/compare/v0.0.1...v0.1.1) (2026-04-28)
 
 
