@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.2.0...v0.2.1) (2026-04-28)
+
+
+### Bug 修复
+
+* 维护页进程wait退出码导致deploy.sh崩溃 ([fbb94e2](https://git.ewing.top/yoea/vibe_blog_next/commit/fbb94e2df0c752d9f49656c318099d31cd172a91))
+* 重写维护页匹配主站风格 ([6130cc3](https://git.ewing.top/yoea/vibe_blog_next/commit/6130cc32a5fa9b9ad3b7665360dc6eeb6af16c81))
+* 遵循 Next.js 16 proxy 命名约定 ([ce58cdb](https://git.ewing.top/yoea/vibe_blog_next/commit/ce58cdb0c84237319630c22d3edca38b4d660725))
+
+
+### 新功能
+
+* 设置页添加维护模式开关（管理员可见） ([993bced](https://git.ewing.top/yoea/vibe_blog_next/commit/993bced389d17c0bffebc996f80451646125d6ad))
+* 手动维护模式 + site_config 全局配置表 ([6b65f8a](https://git.ewing.top/yoea/vibe_blog_next/commit/6b65f8af5b414078d67ab6d7982b13fe04184641))
+* 维护模式白名单与导航栏隐藏 ([bbf40cd](https://git.ewing.top/yoea/vibe_blog_next/commit/bbf40cda3c7bbd994251d9bda83a5186bd408b4c))
+
 ## [0.2.0](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.1.12...v0.2.0) (2026-04-26)
 
 字里行间 v0.2.0 — 基于 Next.js 16 + Supabase 的个人博客系统。
