@@ -1,4 +1,6 @@
+import { readFileSync } from 'fs'
 import { execSync } from 'child_process'
+import { join } from 'path'
 
 export interface BuildInfo {
   commit: string | null
@@ -10,6 +12,14 @@ export interface BuildInfo {
 }
 
 export function getBuildInfo(): BuildInfo {
+  let pkgVersion = '0.1.0'
+  try {
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
+    pkgVersion = pkg.version ?? pkgVersion
+  } catch {
+    // fallback
+  }
+
   const info: BuildInfo = {
     commit: process.env.NEXT_PUBLIC_BUILD_COMMIT ?? null,
     commitCount: process.env.NEXT_PUBLIC_BUILD_COMMIT_COUNT
@@ -18,7 +28,7 @@ export function getBuildInfo(): BuildInfo {
     contributors: process.env.NEXT_PUBLIC_BUILD_CONTRIBUTORS ?? null,
     buildTime: process.env.NEXT_PUBLIC_BUILD_TIME ?? null,
     nodeVersion: process.version,
-    version: '0.1.0',
+    version: pkgVersion,
   }
 
   // Dev mode: read live git data if env vars not injected
