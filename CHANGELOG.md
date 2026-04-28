@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.9](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.1.8...v0.1.9) (2026-04-28)
+
+
+### Bug 修复
+
+* 更新关于页面技术栈与提交次数格式 ([53c8f9e](https://git.ewing.top/yoea/vibe_blog_next/commit/53c8f9e876680d432c34c983614ac78cd06ba1a6))
+
+
+### 新功能
+
+* 优化个人中心头像与布局 ([273d315](https://git.ewing.top/yoea/vibe_blog_next/commit/273d315077636896e524f2ea51124d59b18270db))
+
+
+### 重构
+
+* webhook 部署触发改为仅标签推送 ([95a633f](https://git.ewing.top/yoea/vibe_blog_next/commit/95a633f964c91a689f4e8198adce4fda1b6c79c8))
+
 ### [0.1.8](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.1.7...v0.1.8) (2026-04-28)
 
 
