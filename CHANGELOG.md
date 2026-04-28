@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.5](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.4...v0.1.5) (2026-04-28)
+
+
+### Bug 修复
+
+* 自动启动webhook与配置开机自启 ([3822b4e](https://github.com/yoea/vibe-blog-nextjs/commit/3822b4ea505c474e8248e7213c58dc6f9be4d499))
+
 ### [0.1.4](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.3...v0.1.4) (2026-04-28)
 
 
