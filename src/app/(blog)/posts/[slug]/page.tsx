@@ -5,8 +5,9 @@ import { PostInteraction } from '@/components/blog/post-interaction'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, Edit2 } from 'lucide-react'
+import { Edit2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { Breadcrumb } from '@/components/layout/breadcrumb'
 import { formatTimeAgo } from '@/lib/utils/time'
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
@@ -51,12 +52,13 @@ export default async function PostPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm">
-        <Link href="/" className="flex items-center gap-1 pl-0">
-          <ArrowLeft className="h-4 w-4" />
-          返回文章列表
-        </Link>
-      </Button>
+      <Breadcrumb
+        items={[
+          { label: '首页', href: '/' },
+          ...(post.tags?.[0] ? [{ label: post.tags[0].name, href: `/tags/${encodeURIComponent(post.tags[0].slug)}` as const }] : []),
+          { label: post.title },
+        ]}
+      />
 
       <article>
         <header className="space-y-4 pb-4">
