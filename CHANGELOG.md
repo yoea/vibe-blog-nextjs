@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.8](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.1.7...v0.1.8) (2026-04-28)
+
+
+### Bug 修复
+
+* webhook 返回详细信息 ([67611a4](https://git.ewing.top/yoea/vibe_blog_next/commit/67611a41b78ee91f1a70aef4c9d775df1e5ca78d))
+
 ### [0.1.7](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.6...v0.1.7) (2026-04-28)
 
 
