@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.7](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.6...v0.1.7) (2026-04-28)
+
+
+### Bug 修复
+
+* 面包屑与UX功能优化 ([d593d3c](https://github.com/yoea/vibe-blog-nextjs/commit/d593d3c487a36e862e7d74aad56793d8e54a0099))
+
 ### [0.1.6](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.5...v0.1.6) (2026-04-28)
 
 
