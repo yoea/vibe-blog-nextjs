@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Copy, Check } from 'lucide-react'
+import { copyToClipboard } from '@/lib/utils/clipboard'
 
 export function CodeBlock({ children, className }: { children: React.ReactNode; className?: string }) {
   const preRef = useRef<HTMLPreElement>(null)
@@ -9,19 +10,7 @@ export function CodeBlock({ children, className }: { children: React.ReactNode; 
 
   const handleCopy = async () => {
     const text = preRef.current?.textContent ?? ''
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      // Fallback for non-HTTPS contexts (e.g. LAN dev server)
-      const textarea = document.createElement('textarea')
-      textarea.value = text
-      textarea.style.position = 'fixed'
-      textarea.style.opacity = '0'
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-    }
+    await copyToClipboard(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

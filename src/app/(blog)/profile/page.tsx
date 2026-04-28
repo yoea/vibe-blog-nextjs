@@ -4,6 +4,7 @@ import { ProfileInfoCard } from '@/components/profile/profile-info-card'
 import { MyPostRowList } from '@/components/profile/my-post-row'
 import { GuestbookSection } from '@/components/blog/guestbook-section'
 import { loadMoreMyPosts } from '@/lib/actions/post-actions'
+import { LINK_REF_PROFILE } from '@/lib/constants'
 import { isSuperAdmin } from '@/lib/utils/admin'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -86,7 +87,7 @@ export default async function ProfilePage() {
             initialPosts={posts ?? []}
             initialTotal={count ?? 0}
             onLoadMore={loadMoreMyPosts}
-            linkRef="profile"
+            linkRef={LINK_REF_PROFILE}
           />
         )}
       </section>

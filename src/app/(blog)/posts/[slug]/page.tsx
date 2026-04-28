@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Edit2 } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Breadcrumb } from '@/components/layout/breadcrumb'
+import { buildRefBreadcrumb } from '@/lib/constants'
 import { formatTimeAgo } from '@/lib/utils/time'
 import { createClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
@@ -46,20 +47,11 @@ export default async function PostPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
-  // 根据 ref 构建面包屑
-  const breadcrumbItems: { label: string; href?: string }[] = [{ label: '首页', href: '/' }]
-  if (ref === 'profile') {
-    breadcrumbItems.push({ label: '个人中心', href: '/profile' })
-  } else if (ref?.startsWith('tag:')) {
-    const tagName = ref.slice(4)
-    breadcrumbItems.push({ label: '标签', href: '/tags' })
-    breadcrumbItems.push({ label: tagName, href: `/tags/${encodeURIComponent(tagName)}` })
-  } else if (ref?.startsWith('author:')) {
-    const authorName = ref.slice(7)
-    breadcrumbItems.push({ label: '作者列表', href: '/author' })
-    breadcrumbItems.push({ label: authorName })
-  }
-  breadcrumbItems.push({ label: post.title })
+  const breadcrumbItems: { label: string; href?: string }[] = [
+    { label: '首页', href: '/' },
+    ...buildRefBreadcrumb(ref),
+    { label: post.title },
+  ]
 
   const { data: comments, total: totalComments } = await getCommentsForPost(post.id, { page: 1, pageSize: 10 })
 

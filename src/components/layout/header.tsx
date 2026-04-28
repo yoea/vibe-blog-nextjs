@@ -12,18 +12,21 @@ export function Header({ siteTitle }: { siteTitle: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isMac, setIsMac] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
+  const menuOpenRef = useRef(menuOpen)
+  menuOpenRef.current = menuOpen
   const { mode, resolved, setMode } = useTheme()
   const pathname = usePathname()
 
   // 点击/滑动非菜单区域折叠
   useEffect(() => {
-    if (!menuOpen) return
     const handleEvent = (e: MouseEvent | TouchEvent) => {
-      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+      if (menuOpenRef.current && headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
     }
-    const handleScroll = () => setMenuOpen(false)
+    const handleScroll = () => {
+      if (menuOpenRef.current) setMenuOpen(false)
+    }
     document.addEventListener('mousedown', handleEvent)
     document.addEventListener('touchstart', handleEvent, { passive: true })
     window.addEventListener('scroll', handleScroll, { once: true })
@@ -32,7 +35,7 @@ export function Header({ siteTitle }: { siteTitle: string }) {
       document.removeEventListener('touchstart', handleEvent)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [menuOpen])
+  }, [])
 
   const cycleMode = () => {
     const order: ThemeMode[] = ['light', 'dark', 'system']
