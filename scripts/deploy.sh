@@ -26,6 +26,7 @@ if [ -f "$LOCK_HASH_FILE" ] && [ "$(cat "$LOCK_HASH_FILE")" = "$CURRENT_HASH" ];
   echo "依赖无变更，跳过 npm ci"
 else
   echo "安装依赖..."
+  rm -rf node_modules
   npm ci --no-audit --no-fund --prefer-offline
   echo "$CURRENT_HASH" > "$LOCK_HASH_FILE"
 fi
