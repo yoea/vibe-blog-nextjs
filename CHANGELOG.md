@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.4](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.3...v0.1.4) (2026-04-28)
+
+
+### Bug 修复
+
+* 自动配置 PM2 开机自启 ([15bbcbb](https://github.com/yoea/vibe-blog-nextjs/commit/15bbcbb714a87e2030b4164cd708d15d1b2327c3))
+
 ### [0.1.3](https://github.com/yoea/vibe-blog-nextjs/compare/v0.1.2...v0.1.3) (2026-04-28)
 
 
