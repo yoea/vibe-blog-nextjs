@@ -166,6 +166,8 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
               <button
                 type="button"
                 onClick={async () => {
+                  // 记录当前用户 ID，回调时检测是否被切换到其他账号
+                  document.cookie = `linking_user_id=${userId}; max-age=300; path=/`
                   const supabase = createClient()
                   const { error } = await supabase.auth.linkIdentity({
                     provider: 'github',
