@@ -310,7 +310,18 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
                   <input
                     type="checkbox"
                     checked={icpVisible}
-                    onChange={(e) => setIcpVisible(e.target.checked)}
+                    onChange={async (e) => {
+                      const checked = e.target.checked
+                      setIcpVisible(checked)
+                      const { error } = await updateICPConfig(icpNumber, checked)
+                      if (error) {
+                        setIcpVisible(!checked)
+                        toast.error(error)
+                      } else {
+                        toast.success(checked ? '备案号已显示' : '备案号已隐藏')
+                        router.refresh()
+                      }
+                    }}
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <span className="text-sm">在页脚显示备案号</span>
