@@ -34,7 +34,7 @@ export async function unlinkGitHubIdentity(): Promise<ActionResult> {
   // 清除 user_settings 中的 github_id
   const { error } = await supabase
     .from('user_settings')
-    .update({ github_id: null })
+    .update({ github_id: null, github_username: null })
     .eq('user_id', user.id)
 
   if (error) return { error: error.message }

@@ -24,6 +24,7 @@ interface AuthorData {
   displayName: string
   avatarUrl: string | null
   githubId: string | null
+  githubUsername: string | null
   createdAt: string
   isDeleted: boolean
   deletedAt: string | null
@@ -131,9 +132,9 @@ export function AuthorListClient({
                         >
                           {user.displayName}
                         </span>
-                        {user.githubId && (
+                        {user.githubUsername && (
                           <a
-                            href={`https://github.com/${user.githubId}`}
+                            href={`https://github.com/${user.githubUsername}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}

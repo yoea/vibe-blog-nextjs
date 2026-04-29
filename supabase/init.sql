@@ -70,6 +70,7 @@ create table if not exists user_settings (
   display_name varchar(100),
   avatar_url text,
   github_id text,
+  github_username text,
   is_admin boolean default false,
   is_deleted boolean default false,
   deleted_at timestamptz,
@@ -373,7 +374,7 @@ create trigger update_post_drafts_updated_at
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.user_settings (user_id, display_name, avatar_url, github_id)
+  insert into public.user_settings (user_id, display_name, avatar_url, github_id, github_username)
   values (
     new.id,
     coalesce(
@@ -390,6 +391,15 @@ begin
       when new.raw_user_meta_data ->> 'provider' = 'github'
         or new.raw_user_meta_data ->> 'iss' like '%github%'
       then new.raw_user_meta_data ->> 'sub'
+      else null
+    end,
+    case
+      when new.raw_user_meta_data ->> 'provider' = 'github'
+        or new.raw_user_meta_data ->> 'iss' like '%github%'
+      then coalesce(
+        new.raw_user_meta_data ->> 'user_name',
+        new.raw_user_meta_data ->> 'preferred_username'
+      )
       else null
     end
   )
@@ -434,6 +444,21 @@ create policy "avatars_owner_delete"
     bucket_id = 'avatars'
     and auth.uid() = (storage.foldername(name))[1]::uuid
   );
+
+-- ============================================
+-- Migration: add github_username column
+-- ============================================
+
+alter table user_settings add column if not exists github_username text;
+
+-- Backfill existing GitHub users
+update user_settings us
+set github_username = au.raw_user_meta_data ->> 'user_name'
+from auth.users au
+where us.user_id = au.id
+  and us.github_id is not null
+  and us.github_username is null
+  and (au.raw_user_meta_data ->> 'provider' = 'github' or au.raw_user_meta_data ->> 'iss' like '%github%');
 
 -- ============================================
 -- Site Config（全局配置，key-value 模式）

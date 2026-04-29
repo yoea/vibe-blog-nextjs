@@ -454,7 +454,7 @@ export async function getAllUsers(page = 1, limit = 20) {
   // Fetch user settings with post counts
   const { data: settings, error } = await supabase
     .from('user_settings')
-    .select('user_id, display_name, avatar_url, github_id, is_deleted, deleted_at, created_at')
+    .select('user_id, display_name, avatar_url, github_id, github_username, is_deleted, deleted_at, created_at')
     .order('is_deleted', { ascending: true })
     .order('created_at', { ascending: false })
     .range(from, to)
@@ -483,6 +483,7 @@ export async function getAllUsers(page = 1, limit = 20) {
       displayName: s.display_name ?? '',
       avatarUrl: s.avatar_url ?? null,
       githubId: s.github_id ?? null,
+      githubUsername: s.github_username ?? null,
       createdAt: s.created_at,
       postCount: postCountMap.get(s.user_id) ?? 0,
       isDeleted: s.is_deleted ?? false,
