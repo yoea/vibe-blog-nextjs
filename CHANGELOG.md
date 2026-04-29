@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.2.5...v0.2.6) (2026-04-29)
+
+
+### Bug 修复
+
+* 登录弹窗重复触发与设置页排序优化 ([e1c6941](https://git.ewing.top/yoea/vibe_blog_next/commit/e1c6941f726ec28ccf247ab4b271d3a426118fca))
+* GitHub绑定错误检测支持query参数 ([09a50cb](https://git.ewing.top/yoea/vibe_blog_next/commit/09a50cb826134f898a6199b06ef7b220c2db82e5))
+* webhook git pull改用fetch+reset避免分支分歧 ([6f68c40](https://git.ewing.top/yoea/vibe_blog_next/commit/6f68c40639b9ab1279ea10e6f605ce7e361b34a4))
+
+
+### 新功能
+
+* 作者列表显示GitHub图标链接 ([76f2dd2](https://git.ewing.top/yoea/vibe_blog_next/commit/76f2dd23ea6605cc490424ba0680ca679a152f03))
+* AI标签生成、摘要配置迁移数据库、标签管理优化 ([7f46ce3](https://git.ewing.top/yoea/vibe_blog_next/commit/7f46ce303dd83c646ff6db190a36d8199678ac5f))
+
 ### [0.2.5](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.2.4...v0.2.5) (2026-04-29)
 
 
