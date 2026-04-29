@@ -12,6 +12,9 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const redirectedRef = useRef(false)
 
   useEffect(() => {
+    // 进入登录页时清除标记，确保本次登录能弹出 toast
+    sessionStorage.removeItem('login_toast_shown')
+
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user && !redirectedRef.current) {

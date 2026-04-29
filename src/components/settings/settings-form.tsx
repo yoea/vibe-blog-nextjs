@@ -113,6 +113,8 @@ export function SettingsForm({ user, isAdmin, maintenanceMode }: Props) {
       return
     }
 
+    // 标记：跳过 LoginToast 的 SIGNED_IN 监听（避免弹出"登录成功"）
+    document.cookie = 'skip_login_toast=1; max-age=10; path=/'
     // 验证通过，更新密码
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
     setChangingPassword(false)
@@ -143,45 +145,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode }: Props) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>账户操作</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            {isPasswordUser && (
-            <div>
-            <Button variant="outline" onClick={() => setShowChangePassword(true)} className="w-full sm:w-auto">修改密码</Button>
-            <p className="text-xs text-muted-foreground mt-1">验证当前密码后设置新密码。</p>
-            </div>
-            )}
-
-            <div>
-            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">注销账号</Button>
-            <p className="text-xs text-muted-foreground mt-1">注销后你的文章和评论将被保留，仅用户信息匿名化</p>
-            </div>
-              <Separator />
-            <div>
-            <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
-            <p className="text-xs text-muted-foreground mt-1">退出登录后，你将返回主页</p>
-            </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>支持</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DonateButton>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Heart className="h-4 w-4 mr-1.5 text-red-500" />
-              给网站作者充电
-            </Button>
-          </DonateButton>
-          <p className="text-xs text-muted-foreground mt-2">如果这个网站对你有帮助，可以请作者喝杯咖啡</p>
-        </CardContent>
-      </Card>
-
+      {/* 个性化 */}
       <Card>
         <CardHeader>
           <CardTitle>主题</CardTitle>
@@ -210,6 +174,20 @@ export function SettingsForm({ user, isAdmin, maintenanceMode }: Props) {
         </CardContent>
       </Card>
 
+      {/* 账户安全 */}
+      {isPasswordUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>账户安全</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => setShowChangePassword(true)} className="w-full sm:w-auto">修改密码</Button>
+            <p className="text-xs text-muted-foreground mt-1">验证当前密码后设置新密码。</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 关于 */}
       <Card>
         <CardHeader>
           <CardTitle>关于</CardTitle>
@@ -223,6 +201,23 @@ export function SettingsForm({ user, isAdmin, maintenanceMode }: Props) {
         </CardContent>
       </Card>
 
+      {/* 支持 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>支持</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DonateButton>
+            <Button variant="outline" className="w-full sm:w-auto">
+              <Heart className="h-4 w-4 mr-1.5 text-red-500" />
+              给网站作者充电
+            </Button>
+          </DonateButton>
+          <p className="text-xs text-muted-foreground mt-2">如果这个网站对你有帮助，可以请作者喝杯咖啡</p>
+        </CardContent>
+      </Card>
+
+      {/* 站点管理 (admin only) */}
       {isAdmin && (
         <Card>
           <CardHeader>
@@ -241,6 +236,24 @@ export function SettingsForm({ user, isAdmin, maintenanceMode }: Props) {
           </CardContent>
         </Card>
       )}
+
+      {/* 账户操作 (危险操作放最后) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>账户操作</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
+            <p className="text-xs text-muted-foreground mt-1">退出登录后，你将返回主页</p>
+          </div>
+          <Separator />
+          <div>
+            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">注销账号</Button>
+            <p className="text-xs text-muted-foreground mt-1">注销后你的文章和评论将被保留，仅用户信息匿名化</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
