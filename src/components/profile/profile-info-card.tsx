@@ -3,8 +3,9 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Settings, Mail, Calendar, Edit3, Check, KeyRound, Camera, Trash2 } from 'lucide-react'
+import { Shield, Settings, Mail, Calendar, Edit3, Check, KeyRound, Camera, Trash2, LinkIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 import {
   Dialog,
   DialogContent,
@@ -194,7 +195,21 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
                 已绑定 GitHub
               </span>
             ) : (
-              <span className="text-xs text-muted-foreground">未绑定 GitHub</span>
+              <button
+                type="button"
+                onClick={async () => {
+                  const supabase = createClient()
+                  const { error } = await supabase.auth.linkIdentity({
+                    provider: 'github',
+                    options: { redirectTo: `${window.location.origin}/api/auth/callback?redirect_to=/profile` },
+                  })
+                  if (error) toast.error(error.message)
+                }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LinkIcon className="h-3 w-3" />
+                绑定 GitHub
+              </button>
             )}
           </div>
         </div>
