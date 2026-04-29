@@ -37,7 +37,8 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       setError(error.message)
       toast.error(error.message)
     } else {
-      toast.success('登录成功')
+      // login_success cookie 由 LoginToast 统一处理提示
+      document.cookie = 'login_success=1; max-age=10; path=/'
       window.location.href = redirectTo || '/'
     }
   }
