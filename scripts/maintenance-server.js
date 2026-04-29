@@ -6,12 +6,16 @@ const fs = require('fs')
 const path = require('path')
 
 const port = parseInt(process.env.PORT, 10) || 8083
-const html = fs.readFileSync(
+const template = fs.readFileSync(
   path.join(__dirname, '..', 'public', 'maintenance.html'),
   'utf-8'
 )
 
+// 记录部署开始时间，注入到 HTML 中
+const deployStartMs = Date.now()
+
 const server = http.createServer((_req, res) => {
+  const html = template.replace('__DEPLOY_START_MS__', String(deployStartMs))
   res.writeHead(503, { 'Content-Type': 'text/html; charset=utf-8' })
   res.end(html)
 })
