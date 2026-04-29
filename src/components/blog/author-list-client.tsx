@@ -8,6 +8,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { LoadMore } from '@/components/shared/load-more'
 import { Shield, Trash2 } from 'lucide-react'
+import { GitHubIcon } from '@/components/icons/github-icon'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -22,6 +23,7 @@ interface AuthorData {
   id: string
   displayName: string
   avatarUrl: string | null
+  githubId: string | null
   createdAt: string
   isDeleted: boolean
   deletedAt: string | null
@@ -122,12 +124,26 @@ export function AuthorListClient({
                       defer
                     />
                     <div>
-                      <span
-                        className="font-semibold text-base"
-                        style={{ color: getUserColor(user.id) }}
-                      >
-                        {user.displayName}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="font-semibold text-base"
+                          style={{ color: getUserColor(user.id) }}
+                        >
+                          {user.displayName}
+                        </span>
+                        {user.githubId && (
+                          <a
+                            href={`https://github.com/${user.githubId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            title="GitHub 主页"
+                          >
+                            <GitHubIcon className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                       <div className="text-[10px] text-muted-foreground leading-tight">{user.id.slice(0, 8)}</div>
                     </div>
                   </div>
