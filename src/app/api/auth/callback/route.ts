@@ -20,17 +20,31 @@ export async function GET(request: NextRequest) {
     }
   )
 
+  // linkIdentity 关联前记录的原始用户 ID
+  const linkingUserId = request.cookies.get('linking_user_id')?.value
+
   if (tokenHash && type === 'recovery') {
     await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    // OAuth 登录成功后设置标记 cookie，用于显示登录成功提示
     if (!error) {
-      cookiesToSet.push({
-        name: 'login_success',
-        value: '1',
-        options: { maxAge: 10, path: '/' },
-      })
+      // 检测 linkIdentity 导致的用户切换（GitHub 已绑定其他账号）
+      if (linkingUserId) {
+        const { data: { user: newUser } } = await supabase.auth.getUser()
+        if (newUser && newUser.id !== linkingUserId) {
+          // GitHub 已绑定其他账号，登出被切换的会话，恢复原始用户状态
+          await supabase.auth.signOut()
+          cookiesToSet.push({ name: 'linking_user_id', value: '', options: { maxAge: 0, path: '/' } })
+          cookiesToSet.push({ name: 'link_error', value: 'github_already_linked', options: { maxAge: 10, path: '/' } })
+        } else {
+          // 关联成功，清除关联 cookie
+          cookiesToSet.push({ name: 'linking_user_id', value: '', options: { maxAge: 0, path: '/' } })
+          cookiesToSet.push({ name: 'login_success', value: '1', options: { maxAge: 10, path: '/' } })
+        }
+      } else {
+        // 普通登录
+        cookiesToSet.push({ name: 'login_success', value: '1', options: { maxAge: 10, path: '/' } })
+      }
     }
   }
 
