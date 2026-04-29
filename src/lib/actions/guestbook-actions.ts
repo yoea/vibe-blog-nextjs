@@ -112,21 +112,26 @@ export async function deleteGuestbookMessage(messageId: string, toAuthorId: stri
   if (!message) return { error: '留言不存在' }
   if (message.author_id !== user.id && message.to_author_id !== user.id) return { error: '无权限删除' }
 
-  // Also delete child replies (1-level nesting)
-  const { error: childError } = await supabase
-    .from('guestbook_messages')
-    .delete()
-    .eq('parent_id', messageId)
+  // Use service role to bypass RLS for deletion (handles child replies too)
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) return { error: '服务器配置错误' }
 
-  if (childError) return { error: `删除回复失败: ${childError.message}` }
+  const { createClient: createAdminClient } = await import('@supabase/supabase-js')
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceKey,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
 
-  const { error, count } = await supabase
+  // Delete child replies first, then the message itself
+  await admin.from('guestbook_messages').delete().eq('parent_id', messageId)
+  const { error, count } = await admin
     .from('guestbook_messages')
     .delete({ count: 'exact' })
     .eq('id', messageId)
 
   if (error) return { error: error.message }
-  if (count === 0) return { error: '删除失败，留言可能已被删除或无权限' }
+  if (count === 0) return { error: '删除失败，留言可能已被删除' }
   revalidatePath(`/author/${toAuthorId}`)
   return {}
 }
