@@ -136,6 +136,9 @@ export function AuthorListClient({
                         >
                           {user.displayName}
                         </span>
+                        {adminUserIds?.includes(user.id) && (
+                          <Shield className="h-3.5 w-3.5 text-yellow-500" />
+                        )}
                         {user.githubUsername && (
                           <span
                             role="link"

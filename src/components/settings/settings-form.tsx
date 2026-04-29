@@ -40,6 +40,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
   const [maintenanceLoading, setMaintenanceLoading] = useState(false)
   const [aiSaving, setAiSaving] = useState(false)
@@ -379,7 +380,10 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
         </CardContent>
       </Card>
 
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <Dialog open={showDeleteConfirm} onOpenChange={(open) => {
+        if (!open) setDeleteConfirmEmail('')
+        setShowDeleteConfirm(open)
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>注销账号</DialogTitle>
@@ -387,9 +391,29 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
               确定要注销账号吗？你的文章和评论将被保留，但用户信息将匿名化。此操作不可撤销。
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="delete-confirm-email">
+              请在下方输入 <span className="font-medium">{user.email}</span> 以确认注销
+            </Label>
+            <Input
+              id="delete-confirm-email"
+              type="email"
+              value={deleteConfirmEmail}
+              onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+              placeholder={user.email ?? ''}
+              autoComplete="off"
+            />
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>取消</Button>
-            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deletingAccount}>
+            <Button variant="outline" onClick={() => {
+              setShowDeleteConfirm(false)
+              setDeleteConfirmEmail('')
+            }} disabled={deletingAccount}>取消</Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deletingAccount || deleteConfirmEmail !== user.email}
+            >
               {deletingAccount ? '注销中...' : '确认注销'}
             </Button>
           </DialogFooter>
