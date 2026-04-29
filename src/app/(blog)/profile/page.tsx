@@ -53,7 +53,11 @@ export default async function ProfilePage() {
   const isAdmin = await isSuperAdmin()
 
   // 检查 GitHub 绑定状态
-  const isGitHubConnected = user.identities?.some(i => i.provider === 'github') || !!userSettings?.github_id
+  const githubIdentity = user.identities?.find(i => i.provider === 'github') ?? null
+  const isGitHubConnected = !!githubIdentity || !!userSettings?.github_id
+  const githubUsername = githubIdentity
+    ? (githubIdentity.identity_data?.user_name || githubIdentity.identity_data?.preferred_username || null)
+    : null
 
   return (
     <div className="space-y-8">
@@ -70,6 +74,8 @@ export default async function ProfilePage() {
           createdAt={createdAt}
           isAdmin={isAdmin}
           isGitHubConnected={isGitHubConnected}
+          githubUsername={githubUsername}
+          githubIdentity={githubIdentity}
         />
       </section>
 

@@ -29,17 +29,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // ============================================
-  // Step 2: PKCE 回调处理
-  // ============================================
-  if (request.nextUrl.searchParams.has('code') && !request.nextUrl.pathname.startsWith('/api/auth/callback')) {
-    const callbackUrl = new URL('/api/auth/callback', request.url)
-    callbackUrl.searchParams.set('code', request.nextUrl.searchParams.get('code')!)
-    callbackUrl.searchParams.set('redirect_to', '/reset-password')
-    return NextResponse.redirect(callbackUrl)
-  }
-
-  // ============================================
-  // Step 3: Session 更新 + 路由保护
+  // Step 2: Session 更新 + 路由保护
   // ============================================
   const { response, user } = await updateSession(request)
 

@@ -3,8 +3,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Settings, Mail, Calendar, Edit3, Check, Camera, Trash2, LinkIcon } from 'lucide-react'
+import { Shield, Settings, Mail, Calendar, Edit3, Check, Camera, Trash2, Unlink } from 'lucide-react'
+import type { UserIdentity } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { createClient } from '@/lib/supabase/client'
 import { AvatarUploader } from '@/components/settings/avatar-uploader'
 import type { AvatarUploaderHandle } from '@/components/settings/avatar-uploader'
@@ -22,29 +31,45 @@ interface Props {
   createdAt: string | null
   isAdmin: boolean
   isGitHubConnected: boolean
+  githubUsername: string | null
+  githubIdentity: UserIdentity | null
 }
 
-export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVerified, createdAt, isAdmin, isGitHubConnected }: Props) {
+export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVerified, createdAt, isAdmin, isGitHubConnected, githubUsername, githubIdentity }: Props) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(displayName)
   const [saving, setSaving] = useState(false)
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false)
+  const [unlinking, setUnlinking] = useState(false)
   const avatarRef = useRef<AvatarUploaderHandle>(null)
   const router = useRouter()
 
-  // 检测 OAuth 回调 hash 中的错误（如 identity_already_exists）
+  // 检测 OAuth 回调结果
   useEffect(() => {
     const hash = window.location.hash
-    if (!hash || !hash.includes('error=')) return
-    const params = new URLSearchParams(hash.slice(1))
-    const errorCode = params.get('error_code')
-    const errorDesc = params.get('error_description')
-    if (errorCode === 'identity_already_exists') {
-      toast.error('该 GitHub 账号已被其他账号绑定，无法关联')
-    } else if (errorDesc) {
-      toast.error(decodeURIComponent(errorDesc.replace(/\+/g, ' ')))
+    const cookies = document.cookie.split(';')
+    const hasLinkCookie = cookies.some(c => c.trim().startsWith('linking_user_id='))
+    const hasError = hash.includes('error=')
+
+    if (hasError) {
+      const params = new URLSearchParams(hash.slice(1))
+      const errorCode = params.get('error_code')
+      const errorDesc = params.get('error_description')
+      if (errorCode === 'identity_already_exists') {
+        toast.error(
+          '绑定失败：该 GitHub 账号已绑定到另一个用户。请先登录原账号解除绑定，或使用其他 GitHub 账号。',
+          { duration: 10000 }
+        )
+      } else if (errorDesc) {
+        toast.error(decodeURIComponent(errorDesc.replace(/\+/g, ' ')), { duration: 8000 })
+      }
+      // 清除 hash
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    } else if (hasLinkCookie) {
+      // 无错误 + 有 linking_user_id cookie → 绑定成功
+      document.cookie = 'linking_user_id=; max-age=0; path=/'
+      toast.success('GitHub 账号绑定成功')
     }
-    // 清除 hash
-    history.replaceState(null, '', window.location.pathname + window.location.search)
   }, [])
 
   const handleSaveName = async () => {
@@ -62,6 +87,33 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
       toast.success('昵称已更新')
       router.refresh()
     }
+  }
+
+  const handleUnlinkGitHub = async () => {
+    if (!githubIdentity) return
+    setUnlinking(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.unlinkIdentity(githubIdentity)
+    setUnlinking(false)
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('已解除 GitHub 绑定')
+      setShowUnlinkConfirm(false)
+      router.refresh()
+    }
+  }
+
+  const handleLinkGitHub = async () => {
+    // 记录当前用户 ID，回调时检测是否被切换到其他账号
+    document.cookie = `linking_user_id=${userId}; max-age=300; path=/`
+    const supabase = createClient()
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'github',
+      // 直接重定向到 profile，不经过 callback route，保留 hash 中的错误信息
+      options: { redirectTo: `${window.location.origin}/profile` },
+    })
+    if (error) toast.error(error.message)
   }
 
   return (
@@ -144,6 +196,38 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
                 加入 {createdAt ? formatDaysAgo(createdAt) : '-'}
               </span>
             </div>
+            {/* GitHub 绑定状态 */}
+            <div className="flex items-center gap-2">
+              <GitHubIcon className="h-4 w-4 shrink-0" />
+              {isGitHubConnected ? (
+                <span className="inline-flex items-center gap-1.5 text-xs">
+                  <a
+                    href={`https://github.com/${githubUsername}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-foreground hover:underline"
+                  >
+                    {githubUsername ?? 'GitHub'}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setShowUnlinkConfirm(true)}
+                    className="text-muted-foreground hover:text-destructive transition-colors ml-1"
+                    title="解除绑定"
+                  >
+                    <Unlink className="h-3 w-3" />
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleLinkGitHub}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  绑定 GitHub 账号
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -168,38 +252,25 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
           </div>
           <p className="text-xs text-muted-foreground text-center">支持 JPG、PNG，最大 20MB</p>
         </div>
-
-        {/* Row 2, Col 2: GitHub status */}
-        <div className="mt-4 sm:mt-0 flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <GitHubIcon className="h-4 w-4" />
-            {isGitHubConnected ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
-                <Check className="h-3.5 w-3.5" />
-                已绑定 GitHub
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={async () => {
-                  // 记录当前用户 ID，回调时检测是否被切换到其他账号
-                  document.cookie = `linking_user_id=${userId}; max-age=300; path=/`
-                  const supabase = createClient()
-                  const { error } = await supabase.auth.linkIdentity({
-                    provider: 'github',
-                    options: { redirectTo: `${window.location.origin}/api/auth/callback?redirect_to=/profile` },
-                  })
-                  if (error) toast.error(error.message)
-                }}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <LinkIcon className="h-3 w-3" />
-                绑定 GitHub
-              </button>
-            )}
-          </div>
-        </div>
       </div>
+
+      {/* 解除绑定确认弹窗 */}
+      <Dialog open={showUnlinkConfirm} onOpenChange={setShowUnlinkConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>解除 GitHub 绑定</DialogTitle>
+            <DialogDescription>
+              确定要解除 GitHub 账号绑定吗？解除后可通过重新绑定恢复关联。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUnlinkConfirm(false)} disabled={unlinking}>取消</Button>
+            <Button variant="destructive" onClick={handleUnlinkGitHub} disabled={unlinking}>
+              {unlinking ? '解除中...' : '确认解除'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
