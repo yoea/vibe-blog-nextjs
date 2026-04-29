@@ -41,18 +41,10 @@ export async function deleteUserAsAdmin(targetUserId: string): Promise<ActionRes
 export async function toggleMaintenanceMode(): Promise<ActionResult> {
   if (!await isSuperAdmin()) return { error: '无权限' }
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceKey) return { error: '服务器未配置' }
+  const supabase = await createClient()
 
-  const { createClient: createAdminClient } = await import('@supabase/supabase-js')
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
-
-  // 读取当前状态并取反
-  const { data: config } = await admin
+  // 读取当前状态
+  const { data: config } = await supabase
     .from('site_config')
     .select('value')
     .eq('key', 'maintenance_mode')
@@ -60,7 +52,8 @@ export async function toggleMaintenanceMode(): Promise<ActionResult> {
 
   const newValue = config?.value === 'true' ? 'false' : 'true'
 
-  const { error } = await admin
+  // 写入（通过 RLS 策略控制权限，is_admin 用户可写）
+  const { error } = await supabase
     .from('site_config')
     .update({ value: newValue, updated_at: new Date().toISOString() })
     .eq('key', 'maintenance_mode')

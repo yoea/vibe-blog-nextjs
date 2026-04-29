@@ -449,15 +449,26 @@ create table if not exists site_config (
 
 alter table site_config enable row level security;
 
-create policy "site_config_select"
-  on site_config for select
-  using (true);
+do $$ begin
+  create policy "site_config_select" on site_config for select using (true);
+exception when duplicate_object then null;
+end $$;
 
--- 初始配置项
+do $$ begin
+  create policy "site_config_admin_update" on site_config for update using (
+    exists (select 1 from user_settings where user_id = auth.uid() and is_admin = true)
+  );
+exception when duplicate_object then null;
+end $$;
+
+-- 初始配置项（已存在则跳过）
 insert into site_config (key, value, description) values
   ('maintenance_mode', 'false', '维护模式开关')
 on conflict (key) do nothing;
 
-create trigger update_site_config_updated_at
-  before update on site_config
-  for each row execute function update_updated_at_column();
+do $$ begin
+  create trigger update_site_config_updated_at
+    before update on site_config
+    for each row execute function update_updated_at_column();
+exception when duplicate_object then null;
+end $$;

@@ -15,8 +15,8 @@ echo "=== 开始部署 ==="
 cd "$PROJECT_DIR"
 echo "进入项目目录: $PROJECT_DIR"
 
-# 不用重复拉取项目，因为自动部署时候webhook-server.js里会先拉取代码再执行deploy.sh
-# git pull origin main
+# 手动部署时候先拉取项目，自动部署时候webhook-server.js里也会先拉取代码
+git pull origin main
 
 # =========================
 # 2. 安装依赖（仅 package-lock.json 有变更时才重装）
