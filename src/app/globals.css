@@ -49,11 +49,12 @@
 }
 
 :root {
-  --background: oklch(0.96 0.015 266);
+  --background: oklch(0.97 0.02 266);
+  --background-secondary: oklch(0.96 0.03 280);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(0.98 0.01 266);
+  --card: oklch(0.98 0.012 266);
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(0.98 0.01 266);
+  --popover: oklch(0.98 0.012 266);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.56 0.22 266);
   --primary-foreground: oklch(0.985 0 0);
@@ -84,11 +85,12 @@
 }
 
 .dark {
-  --background: oklch(0.15 0.02 266);
+  --background: oklch(0.15 0.025 266);
+  --background-secondary: oklch(0.14 0.035 280);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.19 0.02 266);
+  --card: oklch(0.19 0.025 266);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.19 0.02 266);
+  --popover: oklch(0.19 0.025 266);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.67 0.19 266);
   --primary-foreground: oklch(0.145 0 0);
@@ -127,7 +129,8 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: linear-gradient(135deg, var(--background) 0%, var(--background-secondary) 100%);
     min-height: 100dvh;
     -webkit-text-size-adjust: 100%;
   }
