@@ -9,6 +9,7 @@ import { Toaster } from 'sonner'
 import { ProgressBar } from '@/components/layout/progress-bar'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 import { CommandPalette } from '@/components/layout/command-palette'
+import { LoginToast } from '@/components/auth/login-toast'
 import { createClient } from '@/lib/supabase/server'
 
 const geistSans = Geist({
@@ -80,6 +81,7 @@ export default async function RootLayout({
           <ProgressBar />
           <CommandPalette />
           <Header siteTitle={siteTitle} isMaintenance={isMaintenance} />
+          <LoginToast />
           <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col">{children}</main>
           <Footer isMaintenance={isMaintenance} />
           <Toaster position="top-center" richColors />

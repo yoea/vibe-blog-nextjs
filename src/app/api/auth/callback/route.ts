@@ -23,7 +23,15 @@ export async function GET(request: NextRequest) {
   if (tokenHash && type === 'recovery') {
     await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
   } else if (code) {
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    // OAuth 登录成功后设置标记 cookie，用于显示登录成功提示
+    if (!error) {
+      cookiesToSet.push({
+        name: 'login_success',
+        value: '1',
+        options: { maxAge: 10, path: '/' },
+      })
+    }
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
