@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Shield, Settings, Mail, Calendar, Edit3, Check, Camera, Trash2, LinkIcon } from 'lucide-react'
@@ -30,6 +30,22 @@ export function ProfileInfoCard({ userId, displayName, avatarUrl, email, emailVe
   const [saving, setSaving] = useState(false)
   const avatarRef = useRef<AvatarUploaderHandle>(null)
   const router = useRouter()
+
+  // 检测 OAuth 回调 hash 中的错误（如 identity_already_exists）
+  useEffect(() => {
+    const hash = window.location.hash
+    if (!hash || !hash.includes('error=')) return
+    const params = new URLSearchParams(hash.slice(1))
+    const errorCode = params.get('error_code')
+    const errorDesc = params.get('error_description')
+    if (errorCode === 'identity_already_exists') {
+      toast.error('该 GitHub 账号已被其他账号绑定，无法关联')
+    } else if (errorDesc) {
+      toast.error(decodeURIComponent(errorDesc.replace(/\+/g, ' ')))
+    }
+    // 清除 hash
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }, [])
 
   const handleSaveName = async () => {
     if (name === displayName) {
