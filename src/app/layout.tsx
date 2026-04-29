@@ -84,7 +84,7 @@ export default async function RootLayout({
           <LoginToast />
           <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col">{children}</main>
           <Footer isMaintenance={isMaintenance} />
-          <Toaster position="top-center" richColors />
+          <Toaster position="top-center" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>
