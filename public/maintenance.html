@@ -259,7 +259,8 @@
   <script>
     const statusText = document.getElementById('statusText')
     const timerDisplay = document.getElementById('timerDisplay')
-    const startTime = Date.now()
+    // 部署开始时间由服务端注入，中途进入的用户也能看到已过去的时长
+    const startTime = __DEPLOY_START_MS__
 
     // 计时器
     function updateTimer() {
