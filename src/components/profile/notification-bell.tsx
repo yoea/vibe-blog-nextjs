@@ -117,7 +117,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
+            <DialogTitle className="flex items-center justify-between pr-10">
               <span>通知</span>
               {unreadCount > 0 && (
                 <button
