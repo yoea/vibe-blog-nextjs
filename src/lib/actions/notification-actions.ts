@@ -18,8 +18,17 @@ interface InsertNotificationParams {
 
 export async function insertNotification(params: InsertNotificationParams): Promise<void> {
   try {
-    const supabase = await createClient()
-    await supabase.from('notifications').insert({
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return
+
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js')
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
+    await admin.from('notifications').insert({
       recipient_id: params.recipientId,
       type: params.type,
       actor_id: params.actorId ?? null,
