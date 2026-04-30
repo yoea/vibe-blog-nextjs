@@ -37,30 +37,53 @@ function runSilent(cmd) {
   return execSync(cmd, { encoding: 'utf-8' }).trim().replaceAll('\r', '')
 }
 
-// 查找 Git for Windows 的 tar.exe（支持 -C 参数）
-// Windows 内置 bsdtar 不正确支持 -C，WSL 的 bash 也不可用
-function findGitTar() {
+// =========================
+// Git Bash tar 封装（Windows 兼容）
+// =========================
+
+// 查找 Git bash.exe
+function findGitBash() {
   const candidates = [
-    'C:\\Program Files\\Git\\usr\\bin\\tar.exe',
-    'C:\\Program Files (x86)\\Git\\usr\\bin\\tar.exe',
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
   ]
   for (const p of candidates) {
-    if (existsSync(p)) return `"${p}"`
+    if (existsSync(p)) return p
   }
   try {
     const gitExe = runSilent('where git').split('\n')[0].trim()
-    const gitDir = resolve(gitExe, '..', '..', 'usr', 'bin', 'tar.exe')
-    if (existsSync(gitDir)) return `"${gitDir}"`
+    const bashPath = resolve(gitExe, '..', '..', 'bin', 'bash.exe')
+    if (existsSync(bashPath)) return bashPath
   } catch {}
-  try {
-    const tarExe = runSilent('where tar').split('\n')[0].trim()
-    if (tarExe && !tarExe.toLowerCase().includes('wsl')) return `"${tarExe}"`
-  } catch {}
-  console.error('❌ 未找到 tar.exe，请确保已安装 Git for Windows')
+  console.error('❌ 未找到 Git bash.exe，请确保已安装 Git for Windows')
   process.exit(1)
 }
 
-const TAR_CMD = findGitTar()
+const BASH_EXE = findGitBash()
+const GIT_ENV = {
+  ...process.env,
+  PATH: `C:\\Program Files\\Git\\usr\\bin;C:\\Program Files\\Git\\bin;${process.env.PATH}`,
+}
+
+// 通过 Git bash 执行 shell 命令（写临时脚本避免引号转义问题）
+function bashExec(script, opts = {}) {
+  const tmpScript = join(PROJECT_DIR, `.deploy-tmp-${process.pid}.sh`)
+  writeFileSync(tmpScript, script)
+  try {
+    return execSync(`"${BASH_EXE}" "${tmpScript}"`, { env: GIT_ENV, ...opts })
+  } finally {
+    try { unlinkSync(tmpScript) } catch {}
+  }
+}
+
+function bashRun(script) {
+  console.log(`  $ ${script}`)
+  return bashExec(script, { stdio: 'inherit' })
+}
+
+function bashSilent(script) {
+  return bashExec(script, { encoding: 'utf-8' }).trim().replaceAll('\r', '')
+}
 
 console.log('=== 本地部署 ===')
 console.log(`目标: ${sshTarget}:${SERVER_DIR}`)
@@ -164,12 +187,12 @@ if (!skipBuild) {
 }
 
 // =========================
-// 3. 打包
+// 3. 打包（通过 Git bash 执行 tar，兼容 Windows）
 // =========================
 console.log('打包产物...')
 const artifactPath = join(PROJECT_DIR, ARTIFACT_NAME)
 try {
-  run(`${TAR_CMD} czf "${ARTIFACT_NAME}" -C .next/standalone .`)
+  bashRun(`tar czf "${ARTIFACT_NAME}" -C .next/standalone .`)
 } catch {
   console.error('❌ tar 打包失败')
   process.exit(1)
@@ -184,10 +207,16 @@ if (size < 1048576) {
 }
 
 // 验证 tarball 内容
-const tarListing = runSilent(`${TAR_CMD} tzf "${ARTIFACT_NAME}"`)
-if (!tarListing.split('\n').some(l => l === './server.js' || l === 'server.js')) {
-  console.error('❌ 打包产物中缺少 ./server.js，tar 内容:')
-  console.error(tarListing.split('\n').slice(0, 20).join('\n'))
+try {
+  const listing = bashSilent(`tar tzf "${ARTIFACT_NAME}"`)
+  if (!listing.split('\n').some(l => l.replace('\r', '') === './server.js' || l.replace('\r', '') === 'server.js')) {
+    console.error('❌ 打包产物中缺少 ./server.js，tar 内容:')
+    console.error(listing.split('\n').slice(0, 20).join('\n'))
+    try { unlinkSync(artifactPath) } catch {}
+    process.exit(1)
+  }
+} catch (e) {
+  console.error('❌ tarball 验证失败:', e.message)
   try { unlinkSync(artifactPath) } catch {}
   process.exit(1)
 }
