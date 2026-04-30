@@ -121,7 +121,9 @@ export function NotificationBell({ initialUnreadCount }: Props) {
               <span>通知</span>
               {unreadCount > 0 && (
                 <button
+                  type="button"
                   onClick={handleMarkAllRead}
+                  onMouseDown={(e) => e.preventDefault()}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <CheckCheck className="h-3.5 w-3.5" />
@@ -142,7 +144,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto -mx-6 px-6 space-y-1 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto -mx-6 px-6 space-y-1 scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
             {!initialLoaded || loading && notifications.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">加载中...</div>
             ) : notifications.length === 0 ? (
@@ -158,7 +160,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                       handleView(n.id, !n.is_read)
                       setOpen(false)
                     }}
-                    className={`flex items-start gap-3 py-3 border-b border-border/50 last:border-0 cursor-pointer hover:bg-accent/50 transition-colors ${!n.is_read ? 'bg-accent/30 -mx-2 px-2 rounded-md' : 'opacity-60'}`}
+                    className={`flex items-start gap-3 py-3 border-b border-border/50 last:border-0 cursor-pointer hover:bg-accent/50 transition-colors ${!n.is_read ? 'bg-primary/5 border-l-2 border-l-primary -mx-2 px-2 rounded-md' : 'opacity-60'}`}
                   >
                     <Avatar
                       avatarUrl={n.actor_avatar_url}
@@ -207,7 +209,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => loadNotifications(page + 1)}
+                      onClick={(e) => { loadNotifications(page + 1); (e.target as HTMLElement).blur() }}
                       disabled={loading}
                     >
                       {loading ? '加载中...' : '加载更多'}
