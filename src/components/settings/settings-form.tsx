@@ -279,7 +279,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {maintenanceMode
                     ? '已开启，访客将看到维护页面'
-                    : '开启后访客将看到维护页面，管理员可正常访问'}
+                    : '开启后访客将看到维护页面，管理员可在维护页面点击结束维护'}
                 </p>
               </div>
               <Button variant={maintenanceMode ? 'destructive' : 'outline'} size="sm" onClick={handleMaintenanceToggle} disabled={maintenanceLoading} className="shrink-0">
