@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, X, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import {
   Dialog,
@@ -89,10 +89,19 @@ export function NotificationBell({ initialUnreadCount }: Props) {
   }, [open, notifications])
 
   const handleDismiss = async (id: string, wasUnread: boolean) => {
+    if (wasUnread) await markAsRead([id])
     await dismissNotification(id)
     setNotifications(prev => prev.filter(n => n.id !== id))
     setTotal(prev => prev - 1)
     if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1))
+  }
+
+  const handleView = async (id: string, wasUnread: boolean) => {
+    if (wasUnread) {
+      await markAsRead([id])
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    }
   }
 
   const hasMore = notifications.length < total
@@ -146,18 +155,20 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                     <div className="flex items-center gap-2 pt-0.5">
                       <span className="text-[11px] text-muted-foreground/60" suppressHydrationWarning>{formatTimeAgo(n.created_at)}</span>
                       <div className="flex-1" />
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        className="text-xs h-6 px-2 text-muted-foreground"
+                      <button
                         onClick={() => handleDismiss(n.id, !n.is_read)}
+                        className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="忽略"
                       >
-                        忽略
-                      </Button>
-                      <Link href={getNotificationLink(n)} onClick={() => setOpen(false)}>
-                        <Button variant="outline" size="xs" className="text-xs h-6 px-2">
-                          去查看
-                        </Button>
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                      <Link
+                        href={getNotificationLink(n)}
+                        onClick={() => { handleView(n.id, !n.is_read); setOpen(false) }}
+                        className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        title="去查看"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </div>
