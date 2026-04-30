@@ -112,7 +112,7 @@ export async function deleteGuestbookMessage(messageId: string, toAuthorId: stri
   if (!message) return { error: '留言不存在' }
   if (message.author_id !== user.id && message.to_author_id !== user.id) return { error: '无权限删除' }
 
-  // Use service role to bypass RLS for deletion (handles child replies too)
+  // Use service role to bypass RLS (page owner may delete others' messages)
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return { error: '服务器配置错误' }
 
@@ -123,15 +123,13 @@ export async function deleteGuestbookMessage(messageId: string, toAuthorId: stri
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  // Delete child replies first, then the message itself
-  await admin.from('guestbook_messages').delete().eq('parent_id', messageId)
-  const { error, count } = await admin
+  // Delete parent message — ON DELETE CASCADE auto-removes child replies
+  const { error } = await admin
     .from('guestbook_messages')
-    .delete({ count: 'exact' })
+    .delete()
     .eq('id', messageId)
 
   if (error) return { error: error.message }
-  if (count === 0) return { error: '删除失败，留言可能已被删除' }
   revalidatePath(`/author/${toAuthorId}`)
   return {}
 }
