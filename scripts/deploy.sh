@@ -56,7 +56,7 @@ export NEXT_PUBLIC_BUILD_VERSION=$(node -e "console.log(require('./package.json'
 # 清理旧构建缓存，防止构建产物残留问题
 rm -rf .next
 
-npm run build
+NODE_OPTIONS="--max-old-space-size=768" npm run build
 # standalone 模式需要手动复制 public 和 static 资源
 mkdir -p .next/standalone/public .next/standalone/.next/static
 cp -r public/. .next/standalone/public/

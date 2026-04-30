@@ -5,6 +5,7 @@ module.exports = {
     {
       name: 'vibe_blog_next',
       script: '.next/standalone/server.js',
+      max_memory_restart: '512M',
       env: {
         PORT: 8083,
       },
