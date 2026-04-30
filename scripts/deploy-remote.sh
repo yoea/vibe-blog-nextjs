@@ -97,8 +97,14 @@ mv "$DEPLOY_TMP" "$PROJECT_DIR/.next/standalone"
 echo "✓ 文件替换完成"
 
 # =========================
-# 7. 启动新版本
+# 7. 停维护页、启动新版本
 # =========================
+if [ -n "$MAINT_PID" ]; then
+  kill "$MAINT_PID" 2>/dev/null || true
+  MAINT_PID=""
+  sleep 1
+fi
+
 cd "$PROJECT_DIR"
 if [ -f .env.local ]; then
   set -a
