@@ -62,8 +62,13 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
   const autoGrow = useCallback(() => {
     const el = contentRef.current
     if (!el) return
+    // Save scroll position — setting height='auto' briefly collapses the textarea,
+    // causing the browser to auto-scroll to keep the cursor visible.
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
     el.style.height = 'auto'
     el.style.height = el.scrollHeight + 120 + 'px'
+    window.scrollTo(scrollX, scrollY)
   }, [])
 
   // Cloud auto-save
