@@ -37,6 +37,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
   canDelete,
   children,
   renderActions,
+  highlightId,
 }: {
   item: T
   currentUserId: string | null
@@ -51,6 +52,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
   canDelete?: boolean
   children?: ReactNode
   renderActions?: (item: T) => ReactNode
+  highlightId?: string | null
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -167,6 +169,7 @@ export function ThreadedItemRenderer<T extends ThreadedItem>({
             deleteDescription={deleteDescription}
             canDelete={canDelete}
             renderActions={renderActions}
+            highlightId={highlightId}
           />
         </div>
       )}
@@ -205,6 +208,7 @@ function ReplyList<T extends ThreadedItem>({
   deleteDescription,
   canDelete,
   renderActions,
+  highlightId,
 }: {
   replies: T[]
   parentAuthorName: string
@@ -219,8 +223,10 @@ function ReplyList<T extends ThreadedItem>({
   deleteDescription?: string
   canDelete?: boolean
   renderActions?: (item: T) => ReactNode
+  highlightId?: string | null
 }) {
-  const [collapsed, setCollapsed] = useState(replies.length > 1)
+  const shouldExpand = highlightId ? replies.some(r => r.id === highlightId) : false
+  const [collapsed, setCollapsed] = useState(replies.length > 1 && !shouldExpand)
   const hiddenCount = replies.length - 1
 
   if (replies.length === 0) return null
@@ -244,6 +250,7 @@ function ReplyList<T extends ThreadedItem>({
           deleteDescription={deleteDescription}
           canDelete={canDelete}
           renderActions={renderActions}
+          highlightId={highlightId}
         />
         {hiddenCount > 0 && (
           collapsed ? (
@@ -272,6 +279,7 @@ function ReplyList<T extends ThreadedItem>({
                   deleteDescription={deleteDescription}
                   canDelete={canDelete}
                   renderActions={renderActions}
+                  highlightId={highlightId}
                 />
               ))}
               <button
@@ -303,6 +311,7 @@ function ReplyItem<T extends ThreadedItem>({
   deleteDescription,
   canDelete,
   renderActions,
+  highlightId,
 }: {
   reply: T
   parentAuthorName: string
@@ -317,6 +326,7 @@ function ReplyItem<T extends ThreadedItem>({
   deleteDescription?: string
   canDelete?: boolean
   renderActions?: (item: T) => ReactNode
+  highlightId?: string | null
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -341,7 +351,7 @@ function ReplyItem<T extends ThreadedItem>({
 
   return (
     <>
-      <div className="flex gap-3 pb-2 pt-1">
+      <div id={`guestbook-msg-${reply.id}`} className="flex gap-3 pb-2 pt-1">
         {!isGuest ? (
           <Avatar
             avatarUrl={avatarUrl}
