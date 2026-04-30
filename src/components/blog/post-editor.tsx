@@ -185,7 +185,7 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
       // Phase 1: auto-add tags matching existing high-frequency tags
       const autoAdded = new Set<string>()
       setTags((prev) => {
-        let next = [...prev]
+        const next = [...prev]
         for (const tag of allAiTags) {
           if (next.length >= 7) break
           if (highFreqNames.has(tag) && !next.includes(tag)) {
