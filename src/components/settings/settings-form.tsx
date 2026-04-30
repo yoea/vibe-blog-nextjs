@@ -352,7 +352,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
                     }}
                     className="h-4 w-4 rounded border-gray-300"
                   />
-                  <span className="text-xs text-muted-foreground">页脚显示</span>
+                  <span className="text-xs text-muted-foreground">{icpVisible ? '已展示' : '已隐藏'}</span>
                 </label>
               </div>
               <div className="flex items-end gap-2">
