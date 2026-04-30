@@ -64,16 +64,19 @@ export function GuestbookSection({
 
   useEffect(() => {
     if (!highlightId) return
-    const el = document.getElementById(`guestbook-msg-${highlightId}`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      const timer = setTimeout(() => setHighlightId(null), 2500)
-      return () => clearTimeout(timer)
-    } else {
-      toast.error('该留言已删除')
-      setHighlightId(null)
-    }
-  }, [highlightId, messages.length])
+    // 等待一帧确保折叠的回复已展开到 DOM
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById(`guestbook-msg-${highlightId}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        setTimeout(() => setHighlightId(null), 2500)
+      } else {
+        toast.error('该留言已删除')
+        setHighlightId(null)
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [highlightId])
 
   useEffect(() => {
     const onHashChange = () => {
@@ -129,6 +132,7 @@ export function GuestbookSection({
                 canDelete={currentUserId !== null && (currentUserId === message.author_id || currentUserId === toAuthorId)}
                 deleteTitle="删除留言"
                 deleteDescription="确定删除这条留言？此操作不可撤销。"
+                highlightId={highlightId}
               />
             </div>
           ))}
