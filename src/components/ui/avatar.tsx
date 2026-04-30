@@ -31,8 +31,8 @@ const sizeMap = {
 
 export function Avatar({ avatarUrl, displayName, userId, size = 'md', className, previewable, defer }: AvatarProps) {
   const [imgError, setImgError] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [showImage, setShowImage] = useState(!defer)
   const mountedRef = useRef(false)
   const { px, fontSize } = sizeMap[size]
   const initial = (displayName ?? userId).charAt(0).toUpperCase()
@@ -40,15 +40,23 @@ export function Avatar({ avatarUrl, displayName, userId, size = 'md', className,
 
   useEffect(() => {
     mountedRef.current = true
-    if (defer && avatarUrl) {
-      const id = requestAnimationFrame(() => {
-        if (mountedRef.current) setShowImage(true)
-      })
-      return () => cancelAnimationFrame(id)
-    }
-  }, [defer, avatarUrl])
+    return () => { mountedRef.current = false }
+  }, [])
 
-  const shouldShowImage = avatarUrl && !imgError && showImage
+  // 有头像时，预加载图片
+  useEffect(() => {
+    if (!avatarUrl || imgError) return
+    const img = new window.Image()
+    img.src = avatarUrl
+    img.onload = () => {
+      if (mountedRef.current) setImgLoaded(true)
+    }
+    img.onerror = () => {
+      if (mountedRef.current) setImgError(true)
+    }
+  }, [avatarUrl, imgError])
+
+  const shouldShowImage = avatarUrl && !imgError && imgLoaded
   const showPreview = previewable && avatarUrl && !imgError
 
   const avatarContent = shouldShowImage ? (
