@@ -37,6 +37,31 @@ function runSilent(cmd) {
   return execSync(cmd, { encoding: 'utf-8' }).trim().replaceAll('\r', '')
 }
 
+// 查找 Git for Windows 的 tar.exe（支持 -C 参数）
+// Windows 内置 bsdtar 不正确支持 -C，WSL 的 bash 也不可用
+function findGitTar() {
+  const candidates = [
+    'C:\\Program Files\\Git\\usr\\bin\\tar.exe',
+    'C:\\Program Files (x86)\\Git\\usr\\bin\\tar.exe',
+  ]
+  for (const p of candidates) {
+    if (existsSync(p)) return `"${p}"`
+  }
+  try {
+    const gitExe = runSilent('where git').split('\n')[0].trim()
+    const gitDir = resolve(gitExe, '..', '..', 'usr', 'bin', 'tar.exe')
+    if (existsSync(gitDir)) return `"${gitDir}"`
+  } catch {}
+  try {
+    const tarExe = runSilent('where tar').split('\n')[0].trim()
+    if (tarExe && !tarExe.toLowerCase().includes('wsl')) return `"${tarExe}"`
+  } catch {}
+  console.error('❌ 未找到 tar.exe，请确保已安装 Git for Windows')
+  process.exit(1)
+}
+
+const TAR_CMD = findGitTar()
+
 console.log('=== 本地部署 ===')
 console.log(`目标: ${sshTarget}:${SERVER_DIR}`)
 
@@ -144,11 +169,9 @@ if (!skipBuild) {
 console.log('打包产物...')
 const artifactPath = join(PROJECT_DIR, ARTIFACT_NAME)
 try {
-  // Windows 默认 shell 为 cmd.exe，其 bsdtar 不正确支持 -C 参数
-  // 强制使用 bash (Git Bash) 的 GNU tar
-  run(`tar czf "${ARTIFACT_NAME}" -C .next/standalone .`, { shell: 'bash' })
+  run(`${TAR_CMD} czf "${ARTIFACT_NAME}" -C .next/standalone .`)
 } catch {
-  console.error('❌ tar 命令不可用，请确保 Windows 10 17063+ 或安装 Git Bash')
+  console.error('❌ tar 打包失败')
   process.exit(1)
 }
 
@@ -160,8 +183,8 @@ if (size < 1048576) {
   process.exit(1)
 }
 
-// 验证 tarball 内容（用 bash 保持与打包一致）
-const tarListing = runSilent(`bash -c "tar tzf '${ARTIFACT_NAME}'"`)
+// 验证 tarball 内容
+const tarListing = runSilent(`${TAR_CMD} tzf "${ARTIFACT_NAME}"`)
 if (!tarListing.split('\n').some(l => l === './server.js' || l === 'server.js')) {
   console.error('❌ 打包产物中缺少 ./server.js，tar 内容:')
   console.error(tarListing.split('\n').slice(0, 20).join('\n'))
