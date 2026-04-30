@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, X, ExternalLink } from 'lucide-react'
+import { Bell, X, Eye, CheckCheck } from 'lucide-react'
 import Link from 'next/link'
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { formatTimeAgo } from '@/lib/utils/time'
-import { getNotifications, markAsRead, dismissNotification } from '@/lib/actions/notification-actions'
+import { getNotifications, markAsRead, dismissNotification, markAllAsRead } from '@/lib/actions/notification-actions'
 import type { Notification, NotificationType } from '@/lib/db/types'
 
 function getNotificationText(type: NotificationType, postTitle?: string | null): string {
@@ -104,6 +104,12 @@ export function NotificationBell({ initialUnreadCount }: Props) {
     }
   }
 
+  const handleMarkAllRead = async () => {
+    await markAllAsRead()
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+    setUnreadCount(0)
+  }
+
   const hasMore = notifications.length < total
 
   return (
@@ -123,7 +129,18 @@ export function NotificationBell({ initialUnreadCount }: Props) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[420px] max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>通知</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span>通知</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  全部已读
+                </button>
+              )}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto -mx-6 px-6 space-y-1">
@@ -168,7 +185,7 @@ export function NotificationBell({ initialUnreadCount }: Props) {
                         className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                         title="去查看"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <Eye className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </div>
