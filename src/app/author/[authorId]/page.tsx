@@ -57,6 +57,7 @@ export default async function AuthorPage({ params }: PageProps) {
       `)
       .eq('author_id', authorId)
       .eq('published', true)
+      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false }),
   ])
 
