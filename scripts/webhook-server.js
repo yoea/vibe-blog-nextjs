@@ -45,6 +45,14 @@ function pullOnly() {
   proc.on('exit', (code) => {
     if (code === 0) {
       console.log(`[${localTime()}] git pull 完成，代码已更新至最新`)
+      // 执行 post-pull 钩子（需 WEBHOOK_AUTO_BUILD=true 且钩子存在）
+      const hookPath = path.join(DEPLOY_DIR, 'scripts', 'post-pull.sh')
+      if (process.env.WEBHOOK_AUTO_BUILD === 'true' && fs.existsSync(hookPath)) {
+        console.log(`[${localTime()}] 执行 post-pull 钩子...`)
+        const hook = spawn('bash', [hookPath], { cwd: DEPLOY_DIR, stdio: 'inherit', env: { ...process.env } })
+        hook.on('error', (err) => console.error(`[${localTime()}] post-pull 钩子执行失败: ${err.message}`))
+        hook.on('exit', (hc) => console.log(`[${localTime()}] post-pull 钩子退出 (exit ${hc})`))
+      }
     } else {
       console.error(`[${localTime()}] git pull 失败 (exit ${code})`)
     }
