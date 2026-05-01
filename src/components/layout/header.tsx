@@ -66,7 +66,15 @@ export function Header({ siteTitle, isMaintenance }: { siteTitle: string; isMain
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
     const supabase = createClient()
 
-    // 先从 session 立即设置登录状态，再异步获取 displayName
+    // 从 session 提取初始 displayName，再异步获取数据库中真实值
+    const deriveUserState = (sessionUser: { email?: string; id: string } | undefined) => {
+      if (!sessionUser) return null
+      return {
+        email: sessionUser.email ?? null,
+        displayName: sessionUser.email?.split('@')[0] ?? null,
+      }
+    }
+
     const fetchDisplayName = async (userId: string) => {
       try {
         const { data: settings } = await supabase
@@ -80,35 +88,30 @@ export function Header({ siteTitle, isMaintenance }: { siteTitle: string; isMain
       }
     }
 
+    const applySession = async (sessionUser: { email?: string; id: string } | undefined) => {
+      if (!sessionUser) {
+        setUser(null)
+        return
+      }
+      // 立即用 email 前缀兜底，tooltip 始终有用户名可显示
+      setUser(deriveUserState(sessionUser))
+      const displayName = await fetchDisplayName(sessionUser.id)
+      if (displayName) {
+        setUser({ email: sessionUser.email ?? null, displayName })
+      }
+    }
+
     const syncSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        // 立即设置基本状态（email），确保 UI 及时反映登录状态
-        setUser((prev) => {
-          if (prev?.email === session.user.email) return prev
-          return { email: session.user.email ?? null, displayName: null }
-        })
-        // 异步获取 displayName
-        const displayName = await fetchDisplayName(session.user.id)
-        setUser({ email: session.user.email ?? null, displayName })
-      } else {
-        setUser(null)
-      }
+      return applySession(session?.user)
     }
 
     syncSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // 忽略 INITIAL_SESSION 事件，由 syncSession 处理初始状态
       if (event === 'INITIAL_SESSION') return
-
       if (session?.user) {
-        setUser((prev) => {
-          if (prev?.email === session.user.email) return prev
-          return { email: session.user.email ?? null, displayName: null }
-        })
-        const displayName = await fetchDisplayName(session.user.id)
-        setUser({ email: session.user.email ?? null, displayName })
+        await applySession(session.user)
       } else {
         setUser(null)
       }
