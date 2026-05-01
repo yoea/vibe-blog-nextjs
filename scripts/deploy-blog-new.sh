@@ -103,6 +103,7 @@ if [ ! -f "$ENV_FILE" ]; then
     SITE_URL=${SITE_URL:-"http://$PUBLIC_IP:$PORT"}
     read -p "  站点描述 (默认: 一个简洁的博客): " SITE_DESC
     SITE_DESC=${SITE_DESC:-"一个简洁的博客"}
+    read -p "  Webhook 密钥 (留空则不验证签名): " WEBHOOK_SECRET
 
     cat > "$ENV_FILE" << EOF
 NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
@@ -111,6 +112,8 @@ SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
 NEXT_PUBLIC_SITE_TITLE=$SITE_TITLE
 NEXT_PUBLIC_SITE_URL=$SITE_URL
 NEXT_PUBLIC_SITE_DESCRIPTION=$SITE_DESC
+${WEBHOOK_SECRET:+WEBHOOK_SECRET=$WEBHOOK_SECRET}
+WEBHOOK_AUTO_BUILD=true
 EOF
 
     echo "✓ .env.local 已创建"
@@ -174,6 +177,15 @@ for i in $(seq 1 $MAX_RETRIES); do
         echo "    pm2 logs                # 查看日志"
         echo "    pm2 restart vibe_blog_next  # 重启"
         echo "    pm2 stop vibe_blog_next     # 停止"
+        echo ""
+        echo "  Git Push 自动部署（可选）:"
+        echo "    1. 开放防火墙: sudo ufw allow 8084/tcp"
+        echo "    2. 在 GitHub/Gitee 仓库 Settings → Webhooks 添加:"
+        echo "       URL: http://$PUBLIC_IP:8084/"
+        echo "       Content type: application/json"
+        ${WEBHOOK_SECRET:+echo "       Secret: $WEBHOOK_SECRET"}
+        echo "       事件: Just the push event"
+        echo "    配置后 git push 到 main 分支会自动拉取代码并重新构建"
         echo "=============================="
         exit 0
     fi
