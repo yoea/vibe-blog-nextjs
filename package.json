@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "sitemap:generate": "node scripts/build/generate-sitemap.mjs",
     "release": "standard-version && node scripts/build/postrelease.js",
     "release:minor": "standard-version --release-as minor",
@@ -50,6 +52,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "prettier": "^3.8.3",
     "standard-version": "^9.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"

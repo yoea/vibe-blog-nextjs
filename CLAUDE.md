@@ -2,7 +2,7 @@
 
 为 Claude Code (claude.ai/code) 提供的项目指引。
 
-##  开发者信息
+## 开发者信息
 
 使用简体中文，要求回答时保持专业、简洁。
 
@@ -16,6 +16,7 @@
 npm run dev        # 启动开发服务器 (监听所有网卡)
 npm run build      # 构建生产版本
 npm run lint       # ESLint 检查
+npm run format     # Prettier 格式化（统一缩进、换行符、引号风格）
 npx tsc --noEmit   # TypeScript 类型检查
 npm run release         # 发版 (自动 bump + CHANGELOG + commit + tag)
 npm run release:minor   # minor 版本 (0.x.0)
@@ -28,6 +29,7 @@ npm run deploy:local    # 本地构建 + 上传部署
 当用户说"发版"时，**必须**执行 `npm run release` 系列命令，**禁止**手动创建 git tag。
 
 流程：
+
 1. `npm run release:minor`（或 `:patch`，视语义而定）
    - standard-version 自动 bump `package.json` 版本号
    - 自动生成/更新 `CHANGELOG.md`
@@ -41,10 +43,10 @@ npm run deploy:local    # 本地构建 + 上传部署
 
 ### GitHub Actions（`.github/workflows/`）
 
-| 文件 | 触发条件 | 功能 |
-|------|---------|------|
-| `ci.yml` | push/PR to main | ESLint + TypeScript 类型检查 |
-| `release.yml` | push tag `v*` | 自动创建 GitHub Release，从 CHANGELOG.md 提取该版本的更新内容（新功能、修复、重构等）作为 release notes |
+| 文件          | 触发条件        | 功能                                                                                                    |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------------------- |
+| `ci.yml`      | push/PR to main | ESLint + TypeScript 类型检查                                                                            |
+| `release.yml` | push tag `v*`   | 自动创建 GitHub Release，从 CHANGELOG.md 提取该版本的更新内容（新功能、修复、重构等）作为 release notes |
 
 > **CHANGELOG 格式**：standard-version 对 minor/major 生成 `## [0.5.0]`（两级标题），对 patch 生成 `### [0.4.3]`（三级标题）。release.yml 的 sed 提取使用 `^#{2,3}` 兼容两种格式。Release 标题直接使用 `${{ github.ref_name }}`（已含 `v` 前缀，无需再加）。
 >
@@ -53,29 +55,30 @@ npm run deploy:local    # 本地构建 + 上传部署
 ## 项目架构
 
 ### 技术栈
+
 - **框架**: Next.js 16 (App Router), React 19
 - **数据库**: Supabase (PostgreSQL) + RLS 行级安全策略
 - **认证**: Supabase Auth (PKCE 流程) via `@supabase/ssr`
-- **样式**: Tailwind CSS v4 (CSS 配置模式, 无 tailwind.config.*), shadcn/ui (base-nova 风格)
+- **样式**: Tailwind CSS v4 (CSS 配置模式, 无 tailwind.config.\*), shadcn/ui (base-nova 风格)
 - **图标**: Lucide React
 
 ### 路由结构
 
-| 路由分组 | 页面 |
-|---------|------|
-| `(auth)/` | login, register, settings (需登录) |
-| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], my-posts |
-| `author/` | 作者列表, author/[authorId] (个人页 + 留言板) |
-| `api/` | auth/callback, generate-summary, generate-tags, healthz, site-stats, my-ip |
+| 路由分组  | 页面                                                                       |
+| --------- | -------------------------------------------------------------------------- |
+| `(auth)/` | login, register, settings (需登录)                                         |
+| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], my-posts          |
+| `author/` | 作者列表, author/[authorId] (个人页 + 留言板)                              |
+| `api/`    | auth/callback, generate-summary, generate-tags, healthz, site-stats, my-ip |
 
 ### Supabase 客户端 (src/lib/supabase/)
 
-| 文件 | 用途 |
-|------|------|
-| `client.ts` | `createBrowserClient` — 浏览器端 (client components) |
-| `server.ts` | `createServerClient` — 服务端组件 & Server Actions |
-| `admin.ts` | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
-| `middleware.ts` | `updateSession()` — 每个请求的 cookie 管理 |
+| 文件            | 用途                                                  |
+| --------------- | ----------------------------------------------------- |
+| `client.ts`     | `createBrowserClient` — 浏览器端 (client components)  |
+| `server.ts`     | `createServerClient` — 服务端组件 & Server Actions    |
+| `admin.ts`      | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
+| `middleware.ts` | `updateSession()` — 每个请求的 cookie 管理            |
 
 ### 数据流
 
@@ -115,13 +118,13 @@ npm run deploy:local    # 本地构建 + 上传部署
 
 ## 环境变量
 
-| 变量 | 必填 | 范围 |
-|------|------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | 是 | 客户端+服务端 |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 是 | 客户端+服务端 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 是 | 仅服务端 |
-| `NEXT_PUBLIC_SITE_TITLE` | 是 | 客户端+服务端 |
-| `NEXT_PUBLIC_SITE_URL` | 是 | 客户端+服务端 |
-| `NEXT_PUBLIC_SITE_DESCRIPTION` | 否 | 客户端+服务端 |
+| 变量                                   | 必填 | 范围          |
+| -------------------------------------- | ---- | ------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | 是   | 客户端+服务端 |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 是   | 客户端+服务端 |
+| `SUPABASE_SERVICE_ROLE_KEY`            | 是   | 仅服务端      |
+| `NEXT_PUBLIC_SITE_TITLE`               | 是   | 客户端+服务端 |
+| `NEXT_PUBLIC_SITE_URL`                 | 是   | 客户端+服务端 |
+| `NEXT_PUBLIC_SITE_DESCRIPTION`         | 否   | 客户端+服务端 |
 
 > AI 配置（API Key、Base URL、Model）已迁移到数据库 `site_config` 表，通过管理后台设置页面管理，不再使用环境变量。
