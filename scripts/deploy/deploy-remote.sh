@@ -15,8 +15,10 @@ PM2_NAME="vibe_blog_next"
 # =========================
 # 健康检查相关配置
 # =========================
-# 用于健康检查的链接，优先读 .env.local 中的 NEXT_PUBLIC_SITE_URL，fallback 到默认值
-SITE_URL=$(grep -oP 'NEXT_PUBLIC_SITE_URL=\K\S+' "$PROJECT_DIR/.env.local" 2>/dev/null || echo "https://blog.ewing.top")
+# 从 .env.local 读取 PORT 和 SITE_URL，读不到用 localhost 默认端口
+ENV_LOCAL="$PROJECT_DIR/.env.local"
+PORT=$(grep -oP '^PORT=\K\d+' "$ENV_LOCAL" 2>/dev/null || echo "8083")
+SITE_URL=$(grep -oP '^NEXT_PUBLIC_SITE_URL=\K\S+' "$ENV_LOCAL" 2>/dev/null || echo "http://localhost:$PORT")
 HEALTH_URL="${SITE_URL}/api/healthz"
 # 健康检查重试次数
 HEALTH_RETRIES=5
