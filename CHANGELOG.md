@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.1](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.4.0...v0.4.1) (2026-05-01)
+
+
+### 文档
+
+* 更新部署文档，反映 tar --exclude、保留 tar 包、PM2 重建流程等优化 ([cededb2](https://git.ewing.top/yoea/vibe_blog_next/commit/cededb263f73386ebdcdc9062f848cd34a2fa458))
+* CLAUDE.md 新增发版规范，禁止手动打 tag ([93a0a4e](https://git.ewing.top/yoea/vibe_blog_next/commit/93a0a4e8e7578f223dcfa2e887e46d8741d9b255))
+
+
+### 其他变更
+
+* 部署成功后保留 tar 包，下次打包自动覆盖 ([9c5d9b3](https://git.ewing.top/yoea/vibe_blog_next/commit/9c5d9b3b33e68ba48ca78b0b5d9225187a3cec4e))
+* 打包时排除不必要的开发文件，减小部署包体积 ([85d4032](https://git.ewing.top/yoea/vibe_blog_next/commit/85d40329c1d2b3a4041906dc4248de0d9878d6b2))
+* 添加 GitHub Actions CI + 调整 ESLint 规则 ([ba83c61](https://git.ewing.top/yoea/vibe_blog_next/commit/ba83c611f5c1e868eb910a375026c9073006a24f))
+* logger 添加时间戳打印 ([6dd86dc](https://git.ewing.top/yoea/vibe_blog_next/commit/6dd86dcb135686b0f95e80f71ebe5e6c2e269145))
+
+
+### 新功能
+
+* 部署时自动重建 webhook 服务，确保脚本变更生效 ([3f833b6](https://git.ewing.top/yoea/vibe_blog_next/commit/3f833b6b637299fc6f3edafbbf7b11e4cc34c4c9))
+* 测试服务器 git push 自动构建部署 ([0053f87](https://git.ewing.top/yoea/vibe_blog_next/commit/0053f87290ce7086c502171bfd00902b443eb422))
+
+
+### Bug 修复
+
+* 2个服务重建时候显示日志 ([b17503e](https://git.ewing.top/yoea/vibe_blog_next/commit/b17503e600944d647149f4b0d0ab3b37a77c3362))
+* 8项UI/功能修复 ([bfd2f46](https://git.ewing.top/yoea/vibe_blog_next/commit/bfd2f46517f2c79ae056ac53390acde45c29856d))
+* 部署脚本端口配置不生效导致健康检查失败 ([022d61e](https://git.ewing.top/yoea/vibe_blog_next/commit/022d61ede3d72c75b3b3193196bc164181fde9c4))
+* 脚本迁移后 __dirname 相对路径未更新 ([686afd0](https://git.ewing.top/yoea/vibe_blog_next/commit/686afd0ffd2220afc177592a8f98dc1c845c0b47))
+* 绿点可点击跳转 + 维护页面状态适配 ([c9a70fc](https://git.ewing.top/yoea/vibe_blog_next/commit/c9a70fc73e5e67a0bfc2cfe57e3bf887424bd9aa))
+* 设置页面hydration错误导致退出登录失效 ([afa2524](https://git.ewing.top/yoea/vibe_blog_next/commit/afa25246c7e6f3de629cdf8ef10992b772701f2e))
+* 添加登出超时容错，避免 signOut 挂起导致页面无响应 ([8c2c062](https://git.ewing.top/yoea/vibe_blog_next/commit/8c2c062cc1c03965f822ce6e46b4abf72cfa5658))
+* 统一 NEXT_PUBLIC_SITE_URL 回退值，从 PORT 环境变量读取端口 ([443af9b](https://git.ewing.top/yoea/vibe_blog_next/commit/443af9b39ac0214acaf373de8b9741df8763527f))
+* 退出登录函数添加try/catch和router.refresh ([ed40386](https://git.ewing.top/yoea/vibe_blog_next/commit/ed4038607eb856af255c9ed23ac5dd21f4d3d5a7))
+* 修复设置页退出登录按钮无法完成登出和跳转问题 ([5941312](https://git.ewing.top/yoea/vibe_blog_next/commit/5941312ce9f256a97a02704974e5bc46c60c11f9))
+* 置顶排序 + 登录状态同步 + 网站地图自动化 ([f27982d](https://git.ewing.top/yoea/vibe_blog_next/commit/f27982dadddb539871920b474a6c0f71e27b9313))
+* ecosystem config 读取 .env.local 中的 PORT ([c53a649](https://git.ewing.top/yoea/vibe_blog_next/commit/c53a6494fb80d5567dbdf729e720a9d2bf122de9))
+* Header登录状态检测修复 ([d88715a](https://git.ewing.top/yoea/vibe_blog_next/commit/d88715a4fad2608d4ce3d09dfec157d5750236c2))
+* Header绿点悬浮显示当前用户名 ([02818c1](https://git.ewing.top/yoea/vibe_blog_next/commit/02818c15f0a982876f325d04e6fc4749b08e4a43))
+* new-blog-deploy.sh .env.local 已存在时 SITE_URL 未定义 ([ada97b6](https://git.ewing.top/yoea/vibe_blog_next/commit/ada97b629e4df57af90e251d6ccc78ffe52380ae))
+
+
+### 重构
+
+* 健康检查从配置文件读取站点地址，移除硬编码域名 ([a05d5f8](https://git.ewing.top/yoea/vibe_blog_next/commit/a05d5f87b5b02f0c973407a97a8cf42bfad88d7d))
+* 统一部署配置，移除硬编码路径和 NODE_ENV ([98de808](https://git.ewing.top/yoea/vibe_blog_next/commit/98de80801569ea9768fbb60b4407966779e55b00))
+* 主应用部署改为 delete + start 重建流程，与 webhook 保持一致 ([be791d7](https://git.ewing.top/yoea/vibe_blog_next/commit/be791d7461908c92b384d1224281b7a2fa9eeda2))
+* scripts 目录按用途分子目录 ([7b41bd7](https://git.ewing.top/yoea/vibe_blog_next/commit/7b41bd7bb65247e9f57bbfd4c3904754b04883d9))
+* settings-form 使用统一 logger 替换 console 输出 ([f4ea1e1](https://git.ewing.top/yoea/vibe_blog_next/commit/f4ea1e1a9f680f5a363f84fc4aa7e240375cb396))
+
 ### [0.2.6](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.2.5...v0.2.6) (2026-04-29)
 
 
