@@ -36,9 +36,11 @@ export async function deleteAccount(): Promise<ActionResult> {
     password: crypto.randomUUID(),
   })
 
-  // Sign out the current session
-  await supabase.auth.signOut()
-
+  // 先刷新缓存（确保作者列表等页面更新），再尝试退出登录
   revalidatePath('/', 'layout')
+  revalidatePath('/author')
+
+  // 清除本地 session（不阻塞，signOut 可能因初始化/锁卡住）
+  supabase.auth.signOut().catch(() => {})
   return {}
 }
