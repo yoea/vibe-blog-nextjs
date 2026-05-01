@@ -68,11 +68,13 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
   const router = useRouter()
 
   const handleLogout = async () => {
+    console.log('[logout] clicked')
     try {
       const supabase = createClient()
-      await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut()
+      console.log('[logout] signOut result:', error ?? 'ok')
     } catch (e) {
-      console.error('signOut error:', e)
+      console.error('[logout] signOut error:', e)
     }
     toast.info('已退出登录')
     router.push('/')
@@ -416,7 +418,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">退出登录</Button>
+            <button type="button" onClick={handleLogout} className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background hover:bg-muted hover:text-foreground h-8 gap-1.5 px-2.5 text-sm font-medium whitespace-nowrap transition-all outline-none select-none w-full sm:w-auto">退出登录</button>
             <p className="text-xs text-muted-foreground mt-1">退出登录后，你将返回主页</p>
           </div>
           <Separator />
