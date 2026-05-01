@@ -66,15 +66,31 @@ export function Header({ siteTitle, isMaintenance }: { siteTitle: string; isMain
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
     const supabase = createClient()
 
-    const syncSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
+    // 先从 session 立即设置登录状态，再异步获取 displayName
+    const fetchDisplayName = async (userId: string) => {
+      try {
         const { data: settings } = await supabase
           .from('user_settings')
           .select('display_name')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .maybeSingle()
-        setUser({ email: session.user.email ?? null, displayName: settings?.display_name ?? null })
+        return settings?.display_name ?? null
+      } catch {
+        return null
+      }
+    }
+
+    const syncSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        // 立即设置基本状态（email），确保 UI 及时反映登录状态
+        setUser((prev) => {
+          if (prev?.email === session.user.email) return prev
+          return { email: session.user.email ?? null, displayName: null }
+        })
+        // 异步获取 displayName
+        const displayName = await fetchDisplayName(session.user.id)
+        setUser({ email: session.user.email ?? null, displayName })
       } else {
         setUser(null)
       }
@@ -82,14 +98,17 @@ export function Header({ siteTitle, isMaintenance }: { siteTitle: string; isMain
 
     syncSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // 忽略 INITIAL_SESSION 事件，由 syncSession 处理初始状态
+      if (event === 'INITIAL_SESSION') return
+
       if (session?.user) {
-        const { data: settings } = await supabase
-          .from('user_settings')
-          .select('display_name')
-          .eq('user_id', session.user.id)
-          .maybeSingle()
-        setUser({ email: session.user.email ?? null, displayName: settings?.display_name ?? null })
+        setUser((prev) => {
+          if (prev?.email === session.user.email) return prev
+          return { email: session.user.email ?? null, displayName: null }
+        })
+        const displayName = await fetchDisplayName(session.user.id)
+        setUser({ email: session.user.email ?? null, displayName })
       } else {
         setUser(null)
       }
