@@ -1,41 +1,22 @@
-import { Home, Users, FileText, PenSquare, LogIn, UserPlus, Settings, Shield, Scale, Map, Heart } from 'lucide-react'
+// 此文件由 scripts/generate-sitemap.mjs 自动生成，请勿手动编辑
+// 运行 `node scripts/generate-sitemap.mjs` 重新生成
 
-export const categories = [
-  {
-    title: '内容浏览',
-    items: [
-      { href: '/', title: '首页', icon: Home },
-      { href: '/author', title: '作者列表', icon: Users },
-      { href: '/sitemap', title: '网站地图', icon: Map },
-    ],
-  },
-  {
-    title: '文章管理',
-    items: [
-      { href: '/profile', title: '个人中心', icon: FileText },
-      { href: '/posts/new', title: '新建文章', icon: PenSquare },
-    ],
-  },
-  {
-    title: '账号',
-    items: [
-      { href: '/login', title: '登录', icon: LogIn },
-      { href: '/register', title: '注册', icon: UserPlus },
-      { href: '/settings', title: '用户设置', icon: Settings },
-    ],
-  },
-  {
-    title: '关于',
-    items: [
-      { href: '/about', title: '关于本站', icon: Heart },
-      { href: '/privacy', title: '隐私政策', icon: Shield },
-      { href: '/legal', title: '法律信息', icon: Scale },
-    ],
-  },
-  {
-    title: '支持',
-    items: [
-      { href: null, title: '给网站作者充电', icon: Heart },
-    ],
-  },
+export interface SitemapRoute {
+  path: string
+  title: string
+}
+
+export const routes: SitemapRoute[] = [
+  { path: '/', title: '首页' },
+  { path: '/about', title: '关于本站' },
+  { path: '/author', title: '作者列表' },
+  { path: '/legal', title: '法律信息' },
+  { path: '/login', title: '登录' },
+  { path: '/maintenance', title: '系统维护中' },
+  { path: '/posts/new', title: '写新文章' },
+  { path: '/privacy', title: '隐私政策' },
+  { path: '/profile', title: '个人中心' },
+  { path: '/register', title: '注册' },
+  { path: '/settings', title: '设置' },
+  { path: '/tags', title: '标签管理' },
 ]

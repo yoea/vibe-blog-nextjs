@@ -65,16 +65,30 @@ export function Header({ siteTitle, isMaintenance }: { siteTitle: string; isMain
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    const syncSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) setUser({ email: session.user.email ?? null })
-    })
+      else setUser(null)
+    }
+
+    syncSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) setUser({ email: session.user.email ?? null })
       else setUser(null)
     })
 
-    return () => subscription.unsubscribe()
+    // 页面重新可见时校验 session（处理 tab 切换后 token 过期的场景）
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') syncSession()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [])
 
   const loginHref = pathname === '/login' ? '/login' : `/login?redirect=${encodeURIComponent(pathname)}`
