@@ -2,6 +2,67 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.4.3...v0.5.0) (2026-05-01)
+
+Vibe Blog Next 是一个现代化的个人博客系统，基于 Next.js 16 App Router + Supabase 构建，支持 Markdown 写作、多用户注册、文章互动和完整的部署流水线。
+
+### 技术栈
+
+- **前端框架**: Next.js 16 (App Router) + React 19
+- **样式方案**: Tailwind CSS v4 + shadcn/ui (base-nova 风格)
+- **后端服务**: Supabase (PostgreSQL + RLS 行级安全 + Auth)
+- **认证**: Supabase Auth (PKCE 流程), `@supabase/ssr` cookie 会话管理
+- **Markdown**: react-markdown + remark-gfm + rehype-highlight + rehype-sanitize
+- **部署**: PM2 双进程 (Next.js + Webhook) + 本地构建上传 + 原子替换 + 健康检查 + 自动回滚
+- **CI/CD**: GitHub Actions 自动类型检查 + ESLint + 标签推送自动创建 Release
+
+### 核心功能
+
+#### 文章系统
+- Markdown 编辑器，支持实时预览、图片上传/裁剪
+- 文章发布/草稿状态、置顶排序、Slug 唯一性
+- 文章标签系统：AI 自动生成标签摘要，标签浏览与筛选
+- 已注销用户的文章可通过管理员归档至独立存档表，支持恢复或永久删除
+
+#### 用户系统
+- 注册/登录（邮箱 + 密码，PKCE 安全认证）
+- 个人设置：头像上传、昵称、个人网站、GitHub、Bio、主题偏好
+- 通知中心：文章互动通知（评论、点赞），点击标记已读
+- 账号注销：级联清理用户数据，注销后可选择匿名化保留文章
+- 管理员功能：列出用户、删除用户、归档文章管理
+
+#### 互动功能
+- 文章点赞：双重追踪（登录用户 + IP），防止重复点赞
+- 评论系统：2 层嵌套回复，扁平 DB 存储 + 客户端构建树结构
+- 留言板：作者个人页留言，支持点赞
+- 文章分享：生成分享链接 + 二维码
+
+#### 公开页面
+- 首页文章列表（分页、置顶优先）
+- 文章详情页（Markdown 渲染、代码高亮）
+- 标签浏览页 + 标签筛选
+- 作者列表 + 作者个人页（含留言板）
+- 关于页、隐私政策、法律条款
+- RSS 订阅、站点地图、robots.txt
+- 站点统计 API（文章数、用户数、访问量）
+
+#### 管理与运维
+- 维护模式：通过数据库 `site_config` 表动态切换，排除管理员
+- AI 配置：在设置页面管理 API Key / Base URL / Model，存储于数据库
+- AI 功能：自动生成文章摘要、自动生成标签
+- 命令面板 (⌘K)：全局搜索导航
+- 站点统计展示（首页 Hero）
+- 面包屑导航、NProgress 进度条
+
+#### 部署与 CI/CD
+- 本地构建 → tar 打包 → scp 上传 → 远程原子替换 → PM2 重启 → 健康检查
+- 健康检查失败自动回滚，确保服务可用
+- Webhook 服务：监听 git push 自动同步代码
+- PM2 双进程：Next.js (端口 8083) + Webhook (端口 8084)
+- GitHub Actions CI：push/PR 触发 ESLint + TypeScript 类型检查
+- GitHub Actions Release：推送 tag 自动从 CHANGELOG 提取内容创建 Release
+- 双远程推送：Gitee (origin) + GitHub
+
 ### [0.4.3](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.4.2...v0.4.3) (2026-05-01)
 
 ### [0.4.2](https://git.ewing.top/yoea/vibe_blog_next/compare/v0.4.1...v0.4.2) (2026-05-01)
