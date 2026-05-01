@@ -68,10 +68,15 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
   const router = useRouter()
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.error('signOut error:', e)
+    }
     toast.info('已退出登录')
     router.push('/')
+    router.refresh()
   }
 
   const handleDeleteAccount = async () => {
