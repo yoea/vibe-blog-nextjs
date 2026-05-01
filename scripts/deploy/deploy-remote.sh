@@ -6,7 +6,8 @@ set -euo pipefail
 # =========================
 # 配置
 # =========================
-PROJECT_DIR="/home/ewing/craft/vibe_blog_next"
+# 从脚本位置推导项目根目录（scripts/deploy/ 的上两级）
+PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 ARTIFACT_PATH="/tmp/deploy-artifact.tar.gz"
 LOCK_FILE="/tmp/deploy-vibe.lock"
 PM2_NAME="vibe_blog_next"

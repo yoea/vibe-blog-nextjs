@@ -29,7 +29,7 @@ function loadEnvFile() {
 loadEnvFile()
 
 const SECRET = process.env.WEBHOOK_SECRET || null
-const DEPLOY_DIR = process.env.SERVER_DIR || '/home/ewing/craft/vibe_blog_next'
+const DEPLOY_DIR = process.env.SERVER_DIR || process.cwd()
 
 // 获取本地时间字符串 (UTC+8)
 function localTime() {
