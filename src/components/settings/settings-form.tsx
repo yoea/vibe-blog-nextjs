@@ -24,6 +24,7 @@ import { Sun, Moon, SunMoon, Heart, Wrench, Eye, EyeOff, ShieldCheck, Loader2 } 
 import { useTheme, type ThemeMode } from '@/components/layout/theme-provider'
 import { DonateButton } from '@/components/donate-button'
 import { toggleMaintenanceMode, updateAIConfig, updateICPConfig, toggleDeployNotify } from '@/lib/actions/admin-actions'
+import { logger } from '@/lib/utils/logger'
 
 interface Props {
   user: User
@@ -68,7 +69,7 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
   const router = useRouter()
 
   const handleLogout = async () => {
-    console.log('退出登录按钮被点击')
+    logger.info('退出登录按钮被点击')
     const supabase = createClient()
     const timeoutMessage = '__signout_timeout__'
     const timeoutPromise = new Promise<{ error: { message: string } }>((resolve) => {
@@ -76,25 +77,25 @@ export function SettingsForm({ user, isAdmin, maintenanceMode, aiBaseUrl: initia
     })
 
     try {
-      console.log('1. 调用 signOut 方法')
+      logger.info('1. 调用 signOut 方法')
       const { error } = await Promise.race([supabase.auth.signOut(), timeoutPromise])
       if (error && error.message !== timeoutMessage) {
-        console.error('[logout] signOut error:', error)
+        logger.error('[logout] signOut error:', error)
         toast.error(error.message ?? '退出登录失败')
         return
       }
 
       if (error?.message === timeoutMessage) {
-        console.warn('[logout] signOut timeout, forcing redirect')
+        logger.warn('[logout] signOut timeout, forcing redirect')
       } else {
-        console.log('[logout] signOut result: ok')
+        logger.info('[logout] signOut result: ok')
       }
 
       toast.success('已退出登录')
       window.location.href = '/'
       return
     } catch (e) {
-      console.error('[logout] signOut exception:', e)
+      logger.error('[logout] signOut exception:', e)
       toast.error('退出登录时发生错误')
       window.location.href = '/'
       return
