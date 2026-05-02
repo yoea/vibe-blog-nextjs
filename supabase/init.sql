@@ -170,6 +170,16 @@ create index if not exists idx_site_likes_liked on site_likes(liked_at);
 create index if not exists idx_guestbook_to_author on guestbook_messages(to_author_id, created_at desc);
 create index if not exists idx_guestbook_ip on guestbook_messages(ip);
 
+-- FK indexes (prevent full table scans on CASCADE delete)
+create index if not exists idx_post_comments_author on post_comments(author_id);
+create index if not exists idx_guestbook_author on guestbook_messages(author_id);
+create index if not exists idx_guestbook_parent on guestbook_messages(parent_id);
+create index if not exists idx_notifications_post on notifications(post_id);
+create index if not exists idx_notifications_actor on notifications(actor_id);
+create index if not exists idx_notifications_guestbook_author on notifications(guestbook_author_id);
+create index if not exists idx_archive_archived_by on articles_archive(archived_by);
+create index if not exists idx_site_config_updated_by on site_config(updated_by);
+
 -- ============================================
 -- Tags (multi-tag support for posts)
 -- ============================================
@@ -207,6 +217,14 @@ create table if not exists post_tags (
 create index if not exists idx_tags_slug on tags(slug);
 create index if not exists idx_post_tags_post on post_tags(post_id);
 create index if not exists idx_post_tags_tag on post_tags(tag_id);
+
+-- Query performance indexes
+create index if not exists idx_post_comments_created_at on post_comments(created_at desc);
+create unique index if not exists idx_tags_name on tags(name);
+create index if not exists idx_tags_created_at on tags(created_at desc);
+create index if not exists idx_user_settings_deleted_created on user_settings(is_deleted, created_at desc);
+-- Composite index for getPostsByAuthor (author_id + sort)
+create index if not exists idx_posts_author_pinned_created on posts(author_id, is_pinned desc, created_at desc);
 
 alter table tags enable row level security;
 alter table post_tags enable row level security;
@@ -576,4 +594,9 @@ create index if not exists idx_archive_archived_at on articles_archive(archived_
 create index if not exists idx_archive_title_search on articles_archive using gin (title gin_trgm_ops);
 create index if not exists idx_archive_original_id on articles_archive(original_id);
 
-alter table articles_archive enable row level security;
+alter table articles_archive add column if not exists tags jsonb;
+
+-- 仅管理员可读取归档
+create policy "admin_select_archive" on articles_archive for select using (
+  exists (select 1 from user_settings where user_id = auth.uid() and is_admin = true)
+);

@@ -109,6 +109,7 @@ export interface ArchivedPost {
   updated_at: string;
   archived_at: string;
   archived_by: string | null;
+  tags: { name: string; slug: string; color: string }[] | null;
 }
 
 export interface ArchivedPostWithAuthor extends ArchivedPost {

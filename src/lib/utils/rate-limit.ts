@@ -33,3 +33,33 @@ export async function checkIpRateLimit(
     remaining: Math.max(0, maxCount - current),
   };
 }
+
+/**
+ * 检查已登录用户在指定时间窗口内的操作频率
+ * @param userId 用户 ID
+ * @param table 表名（如 'post_comments'）
+ * @param maxCount 窗口内最大允许次数
+ * @param windowMinutes 时间窗口（分钟）
+ */
+export async function checkUserRateLimit(
+  userId: string,
+  table: string,
+  maxCount: number,
+  windowMinutes: number,
+  column = 'user_id',
+): Promise<RateLimitResult> {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - windowMinutes * 60_000).toISOString();
+
+  const { count } = await supabase
+    .from(table)
+    .select('*', { count: 'exact', head: true })
+    .eq(column, userId)
+    .gte('created_at', since);
+
+  const current = count ?? 0;
+  return {
+    allowed: current < maxCount,
+    remaining: Math.max(0, maxCount - current),
+  };
+}

@@ -3,19 +3,17 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-import { checkIpRateLimit } from '@/lib/utils/rate-limit';
+import { checkIpRateLimit, checkUserRateLimit } from '@/lib/utils/rate-limit';
 import { insertNotification } from '@/lib/actions/notification-actions';
 import type { ActionResult } from '@/lib/db/types';
 
-function getClientIp(): string {
-  return (async () => {
-    const h = await headers();
-    return (
-      h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      h.get('x-real-ip') ??
-      'unknown'
-    );
-  })() as unknown as string;
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  return (
+    h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    h.get('x-real-ip') ??
+    'unknown'
+  );
 }
 
 export async function toggleLike(
@@ -34,6 +32,9 @@ export async function toggleLike(
     .single();
 
   if (user) {
+    const { allowed } = await checkUserRateLimit(user.id, 'post_likes', 20, 1);
+    if (!allowed) return { error: '操作过于频繁，请稍后再试' };
+
     // Authenticated: track by user_id
     const { data: existing } = await supabase
       .from('post_likes')

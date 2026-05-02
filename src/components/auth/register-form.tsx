@@ -91,9 +91,7 @@ export function RegisterForm() {
           <p className="text-sm text-green-700">
             请检查邮箱完成验证后即可登录。
           </p>
-          <p className="text-sm text-green-700">
-            如果未收到邮件，请在 Supabase Dashboard 中关闭 "Confirm email"。
-          </p>
+          <p className="text-sm text-green-700">如果未收到邮件。</p>
           <Button
             variant="outline"
             onClick={() => (window.location.href = '/login')}

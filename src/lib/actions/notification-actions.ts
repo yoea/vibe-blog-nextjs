@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getNotificationsForUser } from '@/lib/db/queries';
 import type {
   ActionResult,
@@ -27,16 +28,12 @@ export async function insertNotification(
   params: InsertNotificationParams,
 ): Promise<void> {
   try {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) return;
-
-    const { createClient: createAdminClient } =
-      await import('@supabase/supabase-js');
-    const admin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceKey,
-      { auth: { autoRefreshToken: false, persistSession: false } },
-    );
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch {
+      return;
+    }
 
     await admin.from('notifications').insert({
       recipient_id: params.recipientId,

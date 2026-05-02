@@ -119,7 +119,12 @@ export function GuestbookSection({
         {icon}
         <div>
           <h2 className="text-xl font-bold">{title}</h2>
-          <p className="text-xs text-muted-foreground">{initialTotal} 条留言</p>
+          <p className="text-xs text-muted-foreground">
+            {initialTotal} 条留言
+            {!isOwner && !messagesPublic && initialTotal > 0 && (
+              <span className="ml-1">· 仅作者可查看</span>
+            )}
+          </p>
         </div>
       </div>
 
@@ -164,7 +169,7 @@ export function GuestbookSection({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground text-center py-8">
-          暂无留言
+          {initialTotal > 0 ? '暂无可查看留言' : '暂无留言'}
         </p>
       )}
 

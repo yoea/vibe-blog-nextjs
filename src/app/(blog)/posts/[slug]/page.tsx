@@ -1,7 +1,10 @@
 import { getPostBySlug, getCommentsForPost } from '@/lib/db/queries';
 import { notFound } from 'next/navigation';
 import { MarkdownPreview } from '@/components/shared/markdown-preview';
-import { PostInteraction } from '@/components/blog/post-interaction';
+import {
+  PostInteraction,
+  PostActionBar,
+} from '@/components/blog/post-interaction';
 import { ArchivePostButton } from '@/components/blog/archive-post-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -115,6 +118,32 @@ export default async function PostPage({ params, searchParams }: PageProps) {
               </span>
             )}
           </div>
+          <PostActionBar
+            postId={post.id}
+            initialLikeCount={post.like_count}
+            isLiked={post.is_liked_by_current_user}
+            commentCount={post.comment_count}
+            shareUrl={`${await getSiteUrl()}/posts/${post.slug}`}
+            published={post.published}
+            editButton={
+              currentUserId === post.author_id ? (
+                <Button variant="outline" size="sm">
+                  <Link
+                    href={`/posts-edit/${post.slug}`}
+                    className="flex items-center gap-1"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    编辑
+                  </Link>
+                </Button>
+              ) : undefined
+            }
+            archiveButton={
+              isAdmin ? (
+                <ArchivePostButton postId={post.id} postTitle={post.title} />
+              ) : undefined
+            }
+          />
           {post.excerpt && (
             <p className="text-sm text-muted-foreground max-w-prose leading-relaxed">
               {post.excerpt}
@@ -158,24 +187,6 @@ export default async function PostPage({ params, searchParams }: PageProps) {
           initialTotal={totalComments ?? 0}
           shareUrl={`${await getSiteUrl()}/posts/${post.slug}`}
           published={post.published}
-          editButton={
-            currentUserId === post.author_id ? (
-              <Button variant="outline" size="sm">
-                <Link
-                  href={`/posts-edit/${post.slug}`}
-                  className="flex items-center gap-1"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  编辑
-                </Link>
-              </Button>
-            ) : undefined
-          }
-          archiveButton={
-            isAdmin ? (
-              <ArchivePostButton postId={post.id} postTitle={post.title} />
-            ) : undefined
-          }
         />
       </article>
     </div>

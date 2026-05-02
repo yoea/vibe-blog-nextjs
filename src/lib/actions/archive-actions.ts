@@ -26,6 +26,15 @@ export async function archivePost(postId: string): Promise<ActionResult> {
 
   if (fetchError || !post) return { error: '文章不存在' };
 
+  // 读取标签（在删除文章前保存）
+  const { data: postTags } = await admin
+    .from('post_tags')
+    .select('tags(name, slug, color)')
+    .eq('post_id', postId);
+  const tags = (postTags ?? [])
+    .map((pt: any) => pt.tags as { name: string; slug: string; color: string })
+    .filter(Boolean);
+
   // 写入归档表
   const { error: insertError } = await admin.from('articles_archive').insert({
     original_id: post.id,
@@ -40,6 +49,7 @@ export async function archivePost(postId: string): Promise<ActionResult> {
     updated_at: post.updated_at,
     archived_at: new Date().toISOString(),
     archived_by: user.id,
+    tags: tags.length > 0 ? tags : null,
   });
 
   if (insertError) return { error: `归档失败: ${insertError.message}` };
@@ -98,6 +108,38 @@ export async function restorePost(archiveId: string): Promise<ActionResult> {
   });
 
   if (insertError) return { error: `还原失败: ${insertError.message}` };
+
+  // 恢复标签关联
+  const archivedTags: { name: string; slug: string; color: string }[] | null = (
+    archived as any
+  ).tags;
+  if (archivedTags && archivedTags.length > 0) {
+    for (const tag of archivedTags) {
+      // 查找或创建标签
+      const { data: existingTag } = await admin
+        .from('tags')
+        .select('id')
+        .eq('slug', tag.slug)
+        .maybeSingle();
+
+      let tagId: string | null = existingTag?.id ?? null;
+      if (!tagId) {
+        const { data: newTag } = await admin
+          .from('tags')
+          .insert({ name: tag.name, slug: tag.slug, color: tag.color })
+          .select('id')
+          .single();
+        tagId = newTag?.id ?? null;
+      }
+      if (tagId) {
+        await admin
+          .from('post_tags')
+          .insert({ post_id: archived.original_id, tag_id: tagId })
+          .select('id')
+          .maybeSingle();
+      }
+    }
+  }
 
   // 删除归档记录
   await admin.from('articles_archive').delete().eq('id', archiveId);

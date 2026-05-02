@@ -467,7 +467,7 @@ export async function getPostsByAuthor(authorId: string, page = 1, limit = 10) {
     .from('posts')
     .select(
       `
-      *,
+      id, author_id, title, slug, content, excerpt, published, is_pinned, created_at, updated_at,
       like_count:post_likes(count),
       comment_count:post_comments(count)
     `,
@@ -572,23 +572,21 @@ export async function getAllUsers(page = 1, limit = 20) {
     .map((s) => s.user_id);
   const emailMap = new Map<string, string>();
   if (emptyNameUserIds.length > 0) {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (serviceKey) {
-      const { createClient: createAdminClient } =
-        await import('@supabase/supabase-js');
-      const admin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        serviceKey,
-        { auth: { autoRefreshToken: false, persistSession: false } },
+    try {
+      const admin = createAdminClient();
+      const results = await Promise.all(
+        emptyNameUserIds.map((uid) =>
+          admin.auth.admin.getUserById(uid).catch(() => null),
+        ),
       );
-      for (const uid of emptyNameUserIds) {
-        const {
-          data: { user },
-        } = await admin.auth.admin.getUserById(uid);
+      for (let i = 0; i < emptyNameUserIds.length; i++) {
+        const user = results[i]?.data?.user;
         if (user?.email) {
-          emailMap.set(uid, user.email.split('@')[0]);
+          emailMap.set(emptyNameUserIds[i], user.email.split('@')[0]);
         }
       }
+    } catch {
+      // Admin client unavailable, fall back to truncated UUID
     }
   }
 

@@ -8,35 +8,29 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, Share2 } from 'lucide-react';
 import type { CommentWithAuthor } from '@/lib/db/types';
 
-export function PostInteraction({
-  postId,
-  postAuthorId,
-  currentUserId,
-  initialLikeCount,
-  isLiked,
-  initialCommentCount,
-  initialComments,
-  initialTotal,
-  shareUrl,
-  published,
-  editButton,
-  archiveButton,
-}: {
+interface PostActionBarProps {
   postId: string;
-  postAuthorId: string;
-  currentUserId: string | null;
   initialLikeCount: number;
   isLiked: boolean;
-  initialCommentCount: number;
-  initialComments: CommentWithAuthor[];
-  initialTotal: number;
+  commentCount: number;
+  onCommentClick?: () => void;
   shareUrl?: string;
   published?: boolean;
   editButton?: React.ReactNode;
   archiveButton?: React.ReactNode;
-}) {
-  const [commentCount, setCommentCount] = useState(initialCommentCount);
-  const [focusSignal, setFocusSignal] = useState(0);
+}
+
+export function PostActionBar({
+  postId,
+  initialLikeCount,
+  isLiked,
+  commentCount,
+  onCommentClick,
+  shareUrl,
+  published,
+  editButton,
+  archiveButton,
+}: PostActionBarProps) {
   const [showShare, setShowShare] = useState(false);
   const [shareCount, setShareCount] = useState(0);
 
@@ -49,7 +43,6 @@ export function PostInteraction({
 
   const handleShareClick = () => {
     if (published === false) return;
-    // Record share click
     fetch('/api/shares', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -57,7 +50,6 @@ export function PostInteraction({
     }).catch(() => {});
     setShareCount((c) => c + 1);
 
-    // 移动端：调用系统分享接口
     if (
       /Mobi|Android|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent,
@@ -69,7 +61,6 @@ export function PostInteraction({
       return;
     }
 
-    // 桌面端：显示分享对话框（复制链接 + 二维码）
     setShowShare(true);
   };
 
@@ -85,7 +76,15 @@ export function PostInteraction({
           variant="outline"
           size="sm"
           className="gap-1.5 cursor-pointer"
-          onClick={() => setFocusSignal((c) => c + 1)}
+          onClick={() => {
+            if (onCommentClick) {
+              onCommentClick();
+            } else {
+              document
+                .getElementById('comments')
+                ?.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
         >
           <MessageCircle className="h-4 w-4" />
           <span>{commentCount}</span>
@@ -118,6 +117,53 @@ export function PostInteraction({
           url={shareUrl}
         />
       )}
+    </>
+  );
+}
+
+export function PostInteraction({
+  postId,
+  postAuthorId,
+  currentUserId,
+  initialLikeCount,
+  isLiked,
+  initialCommentCount,
+  initialComments,
+  initialTotal,
+  shareUrl,
+  published,
+  editButton,
+  archiveButton,
+}: {
+  postId: string;
+  postAuthorId: string;
+  currentUserId: string | null;
+  initialLikeCount: number;
+  isLiked: boolean;
+  initialCommentCount: number;
+  initialComments: CommentWithAuthor[];
+  initialTotal: number;
+  shareUrl?: string;
+  published?: boolean;
+  editButton?: React.ReactNode;
+  archiveButton?: React.ReactNode;
+}) {
+  const [commentCount, setCommentCount] = useState(initialCommentCount);
+  const [focusSignal, setFocusSignal] = useState(0);
+
+  return (
+    <>
+      <PostActionBar
+        postId={postId}
+        initialLikeCount={initialLikeCount}
+        isLiked={isLiked}
+        commentCount={commentCount}
+        onCommentClick={() => setFocusSignal((c) => c + 1)}
+        shareUrl={shareUrl}
+        published={published}
+        editButton={editButton}
+        archiveButton={archiveButton}
+      />
 
       <CommentSection
         postId={postId}

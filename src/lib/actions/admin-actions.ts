@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isSuperAdmin } from '@/lib/utils/admin';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/lib/db/types';
@@ -10,16 +11,12 @@ export async function deleteUserAsAdmin(
 ): Promise<ActionResult> {
   if (!(await isSuperAdmin())) return { error: '无权限' };
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return { error: '服务器未配置' };
-
-  const { createClient: createAdminClient } =
-    await import('@supabase/supabase-js');
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { error: '服务器未配置' };
+  }
 
   // Mark user_settings as deleted
   await admin

@@ -31,7 +31,10 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
   let tags: string[] = [];
   try {
     const raw = formData.get('tags') as string;
-    if (raw) tags = JSON.parse(raw) as string[];
+    if (raw)
+      tags = JSON.parse(raw).filter(
+        (t: unknown): t is string => typeof t === 'string',
+      );
   } catch {}
 
   if (mode === 'update') {

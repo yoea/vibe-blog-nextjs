@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { deleteAccount, onAuthChange } from '@/lib/actions/auth-actions';
+import {
+  deleteAccount,
+  logout,
+  onAuthChange,
+} from '@/lib/actions/auth-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -75,6 +79,13 @@ export function SettingsForm({
   const [aiApiKey, setAiApiKey] = useState(initialAiApiKey ?? '');
   const [aiModel, setAiModel] = useState(initialAiModel ?? '');
   const [showAiKey, setShowAiKey] = useState(false);
+
+  const maskApiKey = (key: string) => {
+    if (key.length <= 10) return key;
+    const head = key.slice(0, 6);
+    const tail = key.slice(-4);
+    return head + '*'.repeat(key.length - 10) + tail;
+  };
   const [icpNumber, setIcpNumber] = useState(initialIcpNumber ?? '');
   const [icpVisible, setIcpVisible] = useState(initialIcpVisible ?? false);
   const [icpSaving, setIcpSaving] = useState(false);
@@ -96,15 +107,7 @@ export function SettingsForm({
   const router = useRouter();
 
   const handleLogout = async () => {
-    // 直接清除 sb-* auth cookie，绕过 SDK 可能的初始化/锁阻塞
-    document.cookie.split(';').forEach((c) => {
-      const name = c.trim().split('=')[0];
-      if (name.startsWith('sb-')) {
-        document.cookie = `${name}=; path=/; max-age=0`;
-        document.cookie = `${name}=; path=/; max-age=0; domain=${location.hostname}`;
-      }
-    });
-
+    await logout();
     await onAuthChange();
     toast.success('已退出登录');
     window.location.href = '/login';
@@ -517,12 +520,49 @@ export function SettingsForm({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="ai-model">模型名称</Label>
-                  <Input
+                  <select
                     id="ai-model"
                     value={aiModel}
                     onChange={(e) => setAiModel(e.target.value)}
-                    placeholder="gpt-4o-mini"
-                  />
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="">自定义...</option>
+                    <option value="gpt-4o">gpt-4o</option>
+                    <option value="gpt-4o-mini">gpt-4o-mini</option>
+                    <option value="gpt-4-turbo">gpt-4-turbo</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                    <option value="claude-3.5-sonnet">claude-3.5-sonnet</option>
+                    <option value="claude-3-haiku">claude-3-haiku</option>
+                    <option value="deepseek-chat">deepseek-chat</option>
+                    <option value="deepseek-reasoner">deepseek-reasoner</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                    <option value="gemini-2.0-pro">gemini-2.0-pro</option>
+                    <option value="qwen-turbo">qwen-turbo</option>
+                    <option value="qwen-plus">qwen-plus</option>
+                    <option value="glm-4">glm-4</option>
+                    <option value="moonshot-v1">moonshot-v1</option>
+                  </select>
+                  {aiModel &&
+                    ![
+                      'gpt-4o',
+                      'gpt-4o-mini',
+                      'gpt-4-turbo',
+                      'gpt-3.5-turbo',
+                      'claude-3.5-sonnet',
+                      'claude-3-haiku',
+                      'deepseek-chat',
+                      'deepseek-reasoner',
+                      'gemini-2.0-flash',
+                      'gemini-2.0-pro',
+                      'qwen-turbo',
+                      'qwen-plus',
+                      'glm-4',
+                      'moonshot-v1',
+                    ].includes(aiModel) && (
+                      <p className="text-xs text-muted-foreground">
+                        自定义模型: {aiModel}
+                      </p>
+                    )}
                 </div>
               </div>
               <div className="flex items-end gap-2">
@@ -532,14 +572,16 @@ export function SettingsForm({
                     <Input
                       id="ai-api-key"
                       type={showAiKey ? 'text' : 'password'}
-                      value={aiApiKey}
+                      value={showAiKey ? maskApiKey(aiApiKey) : aiApiKey}
                       onChange={(e) => setAiApiKey(e.target.value)}
+                      readOnly={showAiKey && aiApiKey.length > 0}
                       placeholder="sk-..."
                     />
                     <button
                       type="button"
                       onClick={() => setShowAiKey(!showAiKey)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      title={showAiKey ? '隐藏' : '查看（仅显示部分）'}
                     >
                       {showAiKey ? (
                         <EyeOff className="h-4 w-4" />

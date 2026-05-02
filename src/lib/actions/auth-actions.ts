@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/lib/db/types';
 
@@ -11,17 +12,12 @@ export async function deleteAccount(): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (!user) return { error: '未登录' };
 
-  // Check if service role key is available
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return { error: '服务器未配置注销功能' };
-
-  const { createClient: createAdminClient } =
-    await import('@supabase/supabase-js');
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { error: '服务器未配置注销功能' };
+  }
 
   // Keep posts and comments - mark user as deleted instead of removing
   await admin.from('user_settings').upsert({
@@ -49,6 +45,11 @@ export async function deleteAccount(): Promise<ActionResult> {
   // 清除本地 session（不阻塞，signOut 可能因初始化/锁卡住）
   supabase.auth.signOut().catch(() => {});
   return {};
+}
+
+export async function logout(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
 }
 
 export async function onAuthChange(): Promise<void> {

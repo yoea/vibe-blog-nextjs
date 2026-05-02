@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getCommentsForPost } from '@/lib/db/queries';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-import { checkIpRateLimit } from '@/lib/utils/rate-limit';
+import { checkIpRateLimit, checkUserRateLimit } from '@/lib/utils/rate-limit';
 import { insertNotification } from '@/lib/actions/notification-actions';
 import type { ActionResult } from '@/lib/db/types';
 
@@ -42,6 +42,15 @@ export async function createComment(
   };
 
   if (user) {
+    const { allowed } = await checkUserRateLimit(
+      user.id,
+      'post_comments',
+      20,
+      1,
+      'author_id',
+    );
+    if (!allowed) return { error: '评论过于频繁，请稍后再试' };
+
     insertData.author_id = user.id;
     insertData.author_email = user.email;
   } else {
@@ -231,6 +240,14 @@ export async function toggleCommentLike(
   } = await supabase.auth.getUser();
 
   if (user) {
+    const { allowed } = await checkUserRateLimit(
+      user.id,
+      'comment_likes',
+      20,
+      1,
+    );
+    if (!allowed) return { error: '操作过于频繁，请稍后再试' };
+
     const { data: existing } = await supabase
       .from('comment_likes')
       .select('id')

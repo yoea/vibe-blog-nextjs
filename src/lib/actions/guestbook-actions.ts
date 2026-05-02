@@ -1,10 +1,11 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getGuestbookMessages } from '@/lib/db/queries';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-import { checkIpRateLimit } from '@/lib/utils/rate-limit';
+import { checkIpRateLimit, checkUserRateLimit } from '@/lib/utils/rate-limit';
 import { insertNotification } from '@/lib/actions/notification-actions';
 import type { ActionResult } from '@/lib/db/types';
 
@@ -28,6 +29,15 @@ export async function createGuestbookMessage(
   };
 
   if (user) {
+    const { allowed } = await checkUserRateLimit(
+      user.id,
+      'guestbook_messages',
+      20,
+      1,
+      'author_id',
+    );
+    if (!allowed) return { error: '留言过于频繁，请稍后再试' };
+
     insertData.author_id = user.id;
     insertData.author_email = user.email;
   } else {
@@ -151,16 +161,12 @@ export async function deleteGuestbookMessage(
   } = await supabase.auth.getUser();
   if (!user) return { error: '请先登录' };
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return { error: '服务器配置错误' };
-
-  const { createClient: createAdminClient } =
-    await import('@supabase/supabase-js');
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceKey,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { error: '服务器配置错误' };
+  }
 
   // 先验证留言存在且当前用户有权限删除
   const { data: message } = await admin
