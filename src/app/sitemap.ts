@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { getSiteUrl } from '@/lib/site-url';
 import { routes } from './sitemap/sitemap-data';
+
+export const dynamic = 'force-dynamic';
 
 const staticRouteOptions: Record<
   string,
@@ -15,16 +18,8 @@ const staticRouteOptions: Record<
   '/tags': { changeFrequency: 'weekly', priority: 0.6 },
 };
 
-function getSiteUrl() {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    `http://localhost:${process.env.PORT || 3000}`;
-
-  return siteUrl.replace(/\/+$/, '');
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = getSiteUrl();
+  const siteUrl = await getSiteUrl();
   const lastModified = new Date();
 
   // Fetch all published posts
