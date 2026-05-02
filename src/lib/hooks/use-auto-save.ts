@@ -63,11 +63,16 @@ export function useAutoSave({
     if (initialPostId) setPostId(initialPostId);
   }, [initialPostId]);
 
+  const savingRef = useRef(false);
+
   const doSave = useCallback(async () => {
-    // Skip when all fields empty and no draft yet
+    // Prevent concurrent saves — the first save creates the post,
+    // a second save before it returns would create a duplicate
+    if (savingRef.current) return;
     if (!hasContentRef.current && !postIdRef.current) return;
     if (!dirtyRef.current) return;
 
+    savingRef.current = true;
     setStatus('saving');
 
     const current = {
@@ -84,17 +89,19 @@ export function useAutoSave({
 
     if (result.error) {
       setStatus('error');
+      savingRef.current = false;
       return;
     }
 
-    // New post was created
     if (result.postId && result.slug && !postIdRef.current) {
+      postIdRef.current = result.postId;
       setPostId(result.postId);
       onPostCreatedRef.current?.(result.postId, result.slug);
     }
 
     lastSavedRef.current = current;
     dirtyRef.current = false;
+    savingRef.current = false;
     setStatus('saved');
     setCountdown(SAVE_INTERVAL_MS / 1000);
 

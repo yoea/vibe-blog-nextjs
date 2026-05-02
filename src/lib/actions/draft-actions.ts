@@ -63,3 +63,28 @@ export async function autoSaveDraft(data: {
   if (upsertError) return { error: upsertError.message };
   return { postId, slug: post.slug };
 }
+
+export async function deleteDraft(postId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: '未登录' };
+
+  // Verify ownership
+  const { data: post } = await supabase
+    .from('posts')
+    .select('id')
+    .eq('id', postId)
+    .eq('author_id', user.id)
+    .maybeSingle();
+  if (!post) return { error: '文章不存在或无权操作' };
+
+  const { error } = await supabase
+    .from('post_drafts')
+    .delete()
+    .eq('post_id', postId);
+  if (error) return { error: error.message };
+
+  return {};
+}
