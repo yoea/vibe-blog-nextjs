@@ -43,7 +43,7 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login?redirect=/profile');
+  if (!user) redirect('/unauthorized?reason=login&redirect=/profile');
 
   // Fetch user settings
   const { data: userSettings } = await supabase

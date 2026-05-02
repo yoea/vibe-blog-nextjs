@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login?redirect=/settings');
+  if (!user) redirect('/unauthorized?reason=login&redirect=/settings');
 
   const isAdmin = await isSuperAdmin();
 
