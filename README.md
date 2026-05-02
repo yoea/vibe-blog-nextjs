@@ -53,7 +53,7 @@ npm install
 
 在 Supabase Dashboard 的 **SQL Editor** 中执行 `supabase/init.sql`，创建所有表和 RLS 策略。
 
-### 5. 代码格式化
+### 4. 代码格式化
 
 项目使用 EditorConfig + Prettier 统一代码风格，配置了 2 空格缩进、LF 换行符、单引号、尾逗号。
 
@@ -63,6 +63,14 @@ npm run format:check   # 仅检查，不修改文件（CI 用）
 ```
 
 Prettier 自动读取 `.editorconfig` 的通用规范，`.prettierrc` 负责 JS/TS 特有规则。
+
+### 5. 检查与构建
+
+```bash
+npm run lint           # ESLint 代码检查
+npm run build          # 生产环境构建
+npm run start          # 启动生产服务器（需先 build）
+```
 
 ### 6. 启动开发服务器
 

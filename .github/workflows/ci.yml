@@ -24,5 +24,8 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
 
+      - name: Prettier
+        run: npm run format:check
+
       - name: ESLint
         run: npm run lint

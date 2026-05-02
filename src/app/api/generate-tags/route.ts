@@ -86,10 +86,32 @@ ${tagList}
     const raw = data.choices?.[0]?.message?.content?.trim() ?? '';
     logger.debug('AI 返回原始内容:', raw);
 
-    // Parse JSON response (strip markdown code block if present)
-    const jsonStr = raw
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/i, '');
+    // ──────────────────────────────────────
+    // 稳健 JSON 提取
+    // ──────────────────────────────────────
+    let jsonStr = '';
+
+    // Strategy 1: 优先提取 ```json ... ``` 内的内容
+    const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
+    } else {
+      // Strategy 2: 找到第一个 { 和最后一个 } 之间的内容
+      const firstBrace = raw.indexOf('{');
+      const lastBrace = raw.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = raw.slice(firstBrace, lastBrace + 1).trim();
+      } else {
+        jsonStr = raw;
+      }
+    }
+
+    // 清理中文引号（" " → " "）
+    jsonStr = jsonStr.replace(/[“”]/g, '"');
+
+    // 移除尾逗号（AI 常犯错误）：], → ]   }, → }
+    jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+
     logger.debug('解析 JSON:', jsonStr);
 
     let recommended: string[] = [];
@@ -106,7 +128,7 @@ ${tagList}
         .slice(0, 6);
       logger.debug('解析结果:', { recommended, alternative });
     } catch (e) {
-      logger.error('JSON 解析失败:', e, '原始内容:', jsonStr);
+      logger.error('JSON 解析失败:', e, '原始内容:', raw, '处理后:', jsonStr);
       return NextResponse.json(
         { error: 'AI 返回格式异常，请重试' },
         { status: 502 },

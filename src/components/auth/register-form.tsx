@@ -53,15 +53,27 @@ export function RegisterForm() {
     }
 
     const supabase = createClient();
-    const { error: err } = await supabase.auth.signUp({ email, password: pwd });
-    setLoading(false);
+    try {
+      const { error: err } = await supabase.auth.signUp({ email, password: pwd });
+      setLoading(false);
 
-    if (err) {
-      setError(err.message);
-      toast.error(err.message);
-    } else {
-      setSuccess(true);
-      toast.success('注册成功！请检查邮箱完成验证');
+      if (err) {
+        setError(err.message);
+        toast.error(err.message);
+      } else {
+        setSuccess(true);
+        toast.success('注册成功！请检查邮箱完成验证');
+      }
+    } catch (err) {
+      setLoading(false);
+      const message =
+        err instanceof TypeError && err.message === 'Failed to fetch'
+          ? '无法连接认证服务，请检查网络或稍后重试'
+          : err instanceof Error
+            ? err.message
+            : '注册失败，请稍后重试';
+      setError(message);
+      toast.error(message);
     }
   }
 

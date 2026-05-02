@@ -38,7 +38,6 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
   const [tagCooldown, setTagCooldown] = useState(false);
   const [aiAlternative, setAiAlternative] = useState<string[]>([]);
 
-  const [modelName, setModelName] = useState('');
   const lastSummaryTime = useRef(0);
   const lastTagTime = useRef(0);
   const router = useRouter();
@@ -112,13 +111,6 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
   }, [content, tab, autoGrow]);
 
   useEffect(() => {
-    fetch('/api/generate-summary')
-      .then((r) => r.json())
-      .then((data) => setModelName(data.modelName))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     if (!fullscreen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setFullscreen(false);
@@ -163,7 +155,6 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
       }
       const summary = data.summary.slice(0, SUMMARY_MAX_LENGTH);
       setExcerpt(summary);
-      setModelName(data.modelName);
       return summary;
     } catch {
       setError('网络异常，请稍后重试');
@@ -319,15 +310,38 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
         </div>
 
         <div className="space-y-2 shrink-0">
-          <label htmlFor="excerpt" className="block text-sm font-medium">
-            摘要
-          </label>
-          {modelName && (
-            <p className="text-xs text-muted-foreground">
-              正文字数超100字后，可点击下方按钮由{' '}
-              <code className="font-mono">{modelName}</code> 总结摘要
-              {summaryLoading ? (
-                <span className="inline-flex items-center gap-1.5 text-xs text-blue-500 ml-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="excerpt" className="text-sm font-medium">
+              摘要
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                disabled={
+                  summaryLoading ||
+                  summaryCooldown ||
+                  contentLength < SUMMARY_MIN_CONTENT_LENGTH
+                }
+                className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-all ${
+                  summaryLoading
+                    ? 'bg-primary/10 text-primary border-primary/20 cursor-wait'
+                    : contentLength >= SUMMARY_MIN_CONTENT_LENGTH &&
+                        !summaryCooldown
+                      ? 'text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary cursor-pointer'
+                      : 'text-muted-foreground/50 cursor-not-allowed'
+                }`}
+                title={
+                  summaryCooldown
+                    ? '冷却中，请稍后再试'
+                    : contentLength < SUMMARY_MIN_CONTENT_LENGTH
+                      ? '正文内容不足 100 字'
+                      : excerpt
+                        ? '点击重新生成摘要'
+                        : 'AI 生成摘要'
+                }
+              >
+                {summaryLoading ? (
                   <svg
                     className="animate-spin h-3 w-3"
                     viewBox="0 0 24 24"
@@ -337,74 +351,34 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
                   >
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
-                  生成中...
-                </span>
-              ) : excerpt ? (
-                <button
-                  type="button"
-                  onClick={handleGenerateSummary}
-                  disabled={summaryCooldown}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50 ml-2 underline"
-                >
-                  重新生成摘要
-                </button>
-              ) : null}
-            </p>
-          )}
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                    <path d="M5 3v4" />
+                    <path d="M19 17v4" />
+                    <path d="M3 5h4" />
+                    <path d="M17 19h4" />
+                  </svg>
+                )}
+                {summaryLoading
+                  ? '生成中...'
+                  : excerpt
+                    ? '重新生成摘要'
+                    : 'AI 生成摘要'}
+              </button>
+            </div>
+          </div>
           <div className="relative">
-            <button
-              type="button"
-              onClick={handleGenerateSummary}
-              disabled={summaryLoading || summaryCooldown}
-              className={`absolute left-2.5 top-2.5 z-10 p-1.5 rounded-full transition-all ${
-                summaryLoading
-                  ? 'bg-blue-100 text-blue-500 animate-spin cursor-wait'
-                  : canGenerateSummary && !summaryCooldown
-                    ? 'text-gray-400 hover:bg-blue-500 hover:text-white cursor-pointer'
-                    : 'text-gray-300 hover:bg-blue-500 hover:text-white cursor-pointer'
-              }`}
-              title={
-                summaryCooldown
-                  ? '冷却中，请稍后再试'
-                  : canGenerateSummary
-                    ? '点击生成摘要'
-                    : ''
-              }
-            >
-              {summaryLoading ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                  <path d="M5 3v4" />
-                  <path d="M19 17v4" />
-                  <path d="M3 5h4" />
-                  <path d="M17 19h4" />
-                </svg>
-              )}
-            </button>
             <textarea
               id="excerpt"
               value={excerpt}
@@ -414,7 +388,7 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
               placeholder="一句话概括文章..."
               maxLength={SUMMARY_MAX_LENGTH}
               rows={2}
-              className="w-full px-3 py-2 pl-9 rounded-md border bg-transparent text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              className="w-full px-3 py-2 rounded-md border bg-transparent text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
             <p className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none select-none">
               {excerpt.length}/{SUMMARY_MAX_LENGTH}
@@ -436,7 +410,7 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
                 }
                 className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-all ${
                   tagGenerating
-                    ? 'bg-blue-50 text-blue-500 border-blue-200 dark:bg-blue-950 dark:border-blue-800 cursor-wait'
+                    ? 'bg-primary/10 text-primary border-primary/20 cursor-wait'
                     : contentLength >= SUMMARY_MIN_CONTENT_LENGTH &&
                         !tagCooldown
                       ? 'text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary cursor-pointer'
@@ -485,11 +459,6 @@ export function PostEditor({ initialData, suggestedTags }: Props) {
           </div>
           <p className="text-xs text-muted-foreground">
             按 Enter 添加标签，最多 7 个
-            {modelName && (
-              <span className="ml-2 text-muted-foreground/70">
-                由 <code className="font-mono">{modelName}</code> 驱动
-              </span>
-            )}
             {suggestedTags && suggestedTags.length > 0 && (
               <span className="ml-2">
                 常用标签：

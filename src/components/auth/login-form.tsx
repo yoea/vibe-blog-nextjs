@@ -31,19 +31,30 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
     setError('');
     const formData = new FormData(e.currentTarget);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
-    });
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+      });
+      if (error) {
+        const message =
+          error.message === 'Invalid login credentials'
+            ? '用户名或密码错误'
+            : error.message;
+        setError(message);
+        toast.error(message);
+      } else {
+        window.location.href = redirectTo || '/';
+      }
+    } catch (err) {
       const message =
-        error.message === 'Invalid login credentials'
-          ? '用户名或密码错误'
-          : error.message;
+        err instanceof TypeError && err.message === 'Failed to fetch'
+          ? '无法连接认证服务，请检查网络或稍后重试'
+          : err instanceof Error
+            ? err.message
+            : '登录失败，请稍后重试';
       setError(message);
       toast.error(message);
-    } else {
-      window.location.href = redirectTo || '/';
     }
   }
 
@@ -95,19 +106,29 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         type="button"
         onClick={async () => {
           const supabase = createClient();
-          const siteUrl =
-            process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
-          const callbackUrl = `${siteUrl}/api/auth/callback`;
-          const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'github',
-            options: {
-              redirectTo: redirectTo
-                ? `${callbackUrl}?redirect_to=${encodeURIComponent(redirectTo)}`
-                : callbackUrl,
-            },
-          });
-          if (error) {
-            toast.error(error.message);
+          try {
+            const siteUrl =
+              process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+            const callbackUrl = `${siteUrl}/api/auth/callback`;
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: 'github',
+              options: {
+                redirectTo: redirectTo
+                  ? `${callbackUrl}?redirect_to=${encodeURIComponent(redirectTo)}`
+                  : callbackUrl,
+              },
+            });
+            if (error) {
+              toast.error(error.message);
+            }
+          } catch (err) {
+            const message =
+              err instanceof TypeError && err.message === 'Failed to fetch'
+                ? '无法连接认证服务，请检查网络或稍后重试'
+                : err instanceof Error
+                  ? err.message
+                  : 'GitHub 登录失败，请稍后重试';
+            toast.error(message);
           }
         }}
         className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#24292f] text-white rounded-md text-sm font-medium hover:bg-[#24292f]/90 transition-colors cursor-pointer"

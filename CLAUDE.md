@@ -2,16 +2,24 @@
 
 为 Claude Code (claude.ai/code) 提供的项目指引。
 
+##  语言偏好
+
+- 使用简体中文回复。
+
 ## 常用命令
 
 ```bash
 npm run dev        # 启动开发服务器 (监听所有网卡)
 npm run build      # 构建生产版本
+npm run start      # 启动生产服务器
 npm run lint       # ESLint 检查
 npm run format     # Prettier 格式化（统一缩进、换行符、引号风格）
+npm run format:check   # Prettier 仅检查不修改（CI 用）
 npx tsc --noEmit   # TypeScript 类型检查
+npm run sitemap:generate   # 生成网站地图
 npm run release         # 发版 (自动 bump + CHANGELOG + commit + tag)
 npm run release:minor   # minor 版本 (0.x.0)
+npm run release:major   # major 版本 (x.0.0)
 npm run release:patch   # patch 版本 (0.0.x)
 npm run deploy:local    # 本地构建 + 上传部署
 ```
@@ -59,18 +67,27 @@ npm run deploy:local    # 本地构建 + 上传部署
 | 路由分组  | 页面                                                                       |
 | --------- | -------------------------------------------------------------------------- |
 | `(auth)/` | login, register, settings (需登录)                                         |
-| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], my-posts          |
+| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], profile, tags, tags/[slug] |
 | `author/` | 作者列表, author/[authorId] (个人页 + 留言板)                              |
-| `api/`    | auth/callback, generate-summary, generate-tags, healthz, site-stats, my-ip |
+| 其他       | about, legal, privacy, sitemap, maintenance, unauthorized                  |
+| `admin/`  | archive (归档管理)                                                          |
+| `api/`    | auth/callback, check-like, generate-summary, generate-tags, healthz, my-ip, search, shares, site-stats |
 
-### Supabase 客户端 (src/lib/supabase/)
+### 目录结构 (src/)
 
-| 文件            | 用途                                                  |
-| --------------- | ----------------------------------------------------- |
-| `client.ts`     | `createBrowserClient` — 浏览器端 (client components)  |
-| `server.ts`     | `createServerClient` — 服务端组件 & Server Actions    |
-| `admin.ts`      | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
-| `middleware.ts` | `updateSession()` — 每个请求的 cookie 管理            |
+| 路径                     | 用途                                                  |
+| ------------------------ | ----------------------------------------------------- |
+| `lib/supabase/client.ts` | `createBrowserClient` — 浏览器端 (client components)  |
+| `lib/supabase/server.ts` | `createServerClient` — 服务端组件 & Server Actions    |
+| `lib/supabase/admin.ts`  | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
+| `lib/supabase/middleware.ts` | `updateSession()` — 每个请求的 cookie 管理         |
+| `lib/actions/`            | Server Actions — 文章、评论、点赞、认证、设置等       |
+| `lib/db/`                 | 数据库查询 (queries.ts) 与类型定义 (types.ts)         |
+| `lib/utils/`              | 工具函数 — 剪贴板、颜色、时间、频率限制、日志等       |
+| `lib/hooks/`              | 客户端 hooks — 自动保存草稿                           |
+| `lib/build-info.ts`       | 构建元数据（版本、commit、时间等）                    |
+| `lib/constants.ts`        | 常量定义                                              |
+| `lib/site-url.ts`         | 站点 URL 解析工具                                     |
 
 ### 数据流
 
@@ -118,5 +135,38 @@ npm run deploy:local    # 本地构建 + 上传部署
 | `NEXT_PUBLIC_SITE_TITLE`               | 是   | 客户端+服务端 |
 | `NEXT_PUBLIC_SITE_URL`                 | 是   | 客户端+服务端 |
 | `NEXT_PUBLIC_SITE_DESCRIPTION`         | 否   | 客户端+服务端 |
+| `NEXT_PUBLIC_BUILD_VERSION`           | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_COMMIT`            | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_COMMIT_COUNT`      | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_CONTRIBUTORS`      | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_TIME`              | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_HOST`              | 否   | 构建时注入    |
 
 > AI 配置（API Key、Base URL、Model）已迁移到数据库 `site_config` 表，通过管理后台设置页面管理，不再使用环境变量。
+
+## Bug 修复协议
+
+在建议修复方案之前，先追踪目标变量/prop 在所有文件中的完整生命周期：
+
+1. **Grep 查找所有赋值** — 找到该变量被写入的每一处
+2. **读取每个赋值点** — 理解上下文和调用时序
+3. **解释根本原因** — 说明原始值为何缺失/错误，而非修复表象
+4. **然后修复** — 基于根因给出方案
+
+避免：不清楚根因就加回退值、可选链、空值合并等"防御性修补"。
+
+## 配置变更审计
+
+每次完成配置更改后（`.claude/`、`.vscode/`、`.github/`、`package.json`、`tsconfig` 等），展开审计：
+
+1. **识别关联文件** — 列出可能受此配置影响的其他文件
+2. **检查并修复冲突** — 全局 grep 相关 key/字段，确保无残留旧值或矛盾配置
+3. **验证一致性** — 确保 CI、编辑器、git hooks、npm scripts 之间配置一致
+
+## 文档维护
+
+- 每当代码变更影响到项目设置、依赖项、构建步骤或开发人员入职流程时，请主动更新 README.md。不要等待被要求才去更新。
+
+## 编辑偏好
+
+- 优先使用 Edit 工具进行针对性更改（如单函数重构、添加属性、修复特定行）。仅在创建新文件或重写整个文件时使用 Write。这有助于保留周围的格式，并且更节省 Token。

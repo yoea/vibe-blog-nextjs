@@ -117,7 +117,10 @@ export function GuestbookSection({
     <div id="guestbook" className="space-y-4">
       <div className="flex items-center gap-2">
         {icon}
-        <h2 className="text-xl font-bold">{title}</h2>
+        <div>
+          <h2 className="text-xl font-bold">{title}</h2>
+          <p className="text-xs text-muted-foreground">{initialTotal} 条留言</p>
+        </div>
       </div>
 
       {showForm && (
@@ -129,7 +132,7 @@ export function GuestbookSection({
         />
       )}
 
-      {visibleMessages.length > 0 && (
+      {visibleMessages.length > 0 ? (
         <div className="space-y-3">
           {visibleMessages.map((message) => (
             <div
@@ -159,6 +162,10 @@ export function GuestbookSection({
             </div>
           ))}
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground text-center py-8">
+          暂无留言
+        </p>
       )}
 
       <LoadMore
@@ -168,6 +175,7 @@ export function GuestbookSection({
         remaining={remainingTopLevel}
         idleText="加载更多留言"
         loadedAllText="已显示全部留言"
+        showLoadedAll={visibleMessages.length > 0}
       />
     </div>
   );
