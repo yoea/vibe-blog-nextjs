@@ -18,6 +18,8 @@ const OUTPUT = join(
   'sitemap-data.ts',
 );
 
+const EXCLUDED_ROUTE_PREFIXES = ['/unauthorized'];
+
 const NON_INDEXABLE_ROUTE_PREFIXES = [
   '/admin',
   '/login',
@@ -31,6 +33,12 @@ const NON_INDEXABLE_ROUTE_PREFIXES = [
 
 function isIndexableRoute(routePath) {
   return !NON_INDEXABLE_ROUTE_PREFIXES.some(
+    (prefix) => routePath === prefix || routePath.startsWith(`${prefix}/`),
+  );
+}
+
+function isGeneratedRoute(routePath) {
+  return !EXCLUDED_ROUTE_PREFIXES.some(
     (prefix) => routePath === prefix || routePath.startsWith(`${prefix}/`),
   );
 }
@@ -56,6 +64,7 @@ function scanRoutes(dir, basePath = '') {
       routes.push(...scanRoutes(fullPath, `${basePath}/${entry.name}`));
     } else if (entry.name === 'page.tsx') {
       const routePath = basePath || '/';
+      if (!isGeneratedRoute(routePath)) continue;
       // 从文件中提取 metadata title
       const title = extractTitle(fullPath);
       routes.push({
