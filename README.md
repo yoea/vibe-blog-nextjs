@@ -101,7 +101,7 @@ Git Push → Webhook (8084) → 仅拉取代码（不构建不部署）
 npm run deploy:local
 ```
 
-详细部署文档见 [doc/deploy.md](doc/deploy.md)。
+详细部署文档见 [docs/deploy-tips.md](docs/deploy-tips.md)。
 
 ### 自动代码同步
 
@@ -166,7 +166,7 @@ pm2 resurrect                                  # 恢复保存的进程列表
 
 ## 发版说明
 
-详细发版指南文档见 [doc/release.md](doc/release.md)。
+详细发版指南文档见 [docs/release-tips.md](docs/release-tips.md)。
 
 ## Supabase 生产环境配置
 

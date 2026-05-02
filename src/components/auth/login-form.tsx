@@ -109,8 +109,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         onClick={async () => {
           const supabase = createClient();
           try {
-            const siteUrl =
-              process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+            const siteUrl = window.location.origin;
             const callbackUrl = `${siteUrl}/api/auth/callback`;
             const { error } = await supabase.auth.signInWithOAuth({
               provider: 'github',

@@ -17,10 +17,12 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // =========================
-// 配置（优先读取 ~/.ssh/config，可通过环境变量覆盖）
+// 配置（可通过环境变量覆盖默认值）
 // =========================
 const SSH_HOST = process.env.SSH_HOST || 'ewing.top';
 const SERVER_DIR = process.env.SERVER_DIR || '/home/ewing/craft/vibe_blog_next';
+// 公网健康检查 URL（可选），不设置则跳过公网检查，仅通过 SSH 执行 localhost 检查
+const HEALTH_URL = process.env.HEALTH_URL || 'http://101.132.172.82:8083/api/healthz';
 const ARTIFACT_NAME = 'deploy-artifact.tar.gz';
 
 const skipBuild = process.argv.includes('--skip-build');
@@ -350,6 +352,38 @@ try {
     unlinkSync(artifactPath);
   } catch {}
   process.exit(1);
+}
+
+// 远端健康检查（双重保险：deploy-remote.sh 已完成 localhost 检查）
+// 优先用 HEALTH_URL 做公网可达性检查，最终通过 SSH 在服务端 localhost 验证
+if (HEALTH_URL) {
+  console.log(`公网可达性检查: ${HEALTH_URL}`);
+  try {
+    const publicCheck = runSilent(
+      `curl -s --connect-timeout 10 --max-time 15 "${HEALTH_URL}"`,
+    );
+    if (publicCheck.includes('"status":"ok"')) {
+      console.log('  ✓ 公网可达');
+    } else {
+      console.log(`  ⚠ 公网检查响应异常: ${publicCheck.slice(0, 120)}`);
+    }
+  } catch {
+    console.log('  ⚠ 公网不可达');
+  }
+}
+// SSH 到服务端执行 localhost 检查（最可靠的验证方式）
+console.log('SSH 复查服务端 localhost...');
+try {
+  const remoteCheck = runSilent(
+    `ssh ${sshOpts} ${sshTarget} "curl -s --connect-timeout 5 --max-time 10 http://localhost:8083/api/healthz"`,
+  );
+  if (remoteCheck.includes('"status":"ok"')) {
+    console.log('  ✓ 服务端 localhost 健康检查通过');
+  } else {
+    console.log(`  ❌ 服务端检查异常: ${remoteCheck.slice(0, 120)}`);
+  }
+} catch {
+  console.log('  ❌ 服务端检查也失败了，请手动验证');
 }
 
 const elapsed = Math.floor((Date.now() - startTime) / 1000);

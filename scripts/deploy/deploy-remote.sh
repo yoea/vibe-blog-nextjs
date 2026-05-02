@@ -19,8 +19,7 @@ PM2_NAME="vibe_blog_next"
 # 从 .env.local 读取 PORT 和 SITE_URL，读不到用 localhost 默认端口
 ENV_LOCAL="$PROJECT_DIR/.env.local"
 PORT=$(grep -oP '^PORT=\K\d+' "$ENV_LOCAL" 2>/dev/null || echo "8083")
-SITE_URL=$(grep -oP '^NEXT_PUBLIC_SITE_URL=\K\S+' "$ENV_LOCAL" 2>/dev/null || echo "http://localhost:$PORT")
-HEALTH_URL="${SITE_URL}/api/healthz"
+HEALTH_URL="http://localhost:$PORT/api/healthz"
 # 健康检查重试次数
 HEALTH_RETRIES=5
 # 健康检查重试间隔（秒）

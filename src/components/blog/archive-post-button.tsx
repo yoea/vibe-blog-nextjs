@@ -39,7 +39,7 @@ export function ArchivePostButton({ postId, postTitle }: Props) {
   };
 
   return (
-    <>
+    <div className="contents">
       <Button
         variant="outline"
         size="sm"
@@ -77,6 +77,6 @@ export function ArchivePostButton({ postId, postTitle }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
