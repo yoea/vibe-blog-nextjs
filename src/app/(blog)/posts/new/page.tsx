@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { PostEditor } from '@/components/blog/post-editor';
 import { getTopTags } from '@/lib/db/queries';
 
@@ -10,7 +8,7 @@ export default async function NewPostPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login?redirect=/posts/new');
+  if (!user) redirect('/unauthorized?reason=login&redirect=/posts/new');
 
   const suggestedTags = await getTopTags(10);
 

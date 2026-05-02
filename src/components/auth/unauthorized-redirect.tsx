@@ -7,13 +7,27 @@ import { buttonVariants } from '@/components/ui/button';
 
 const REDIRECT_SECONDS = 5;
 
-export function UnauthorizedRedirect() {
+interface UnauthorizedRedirectProps {
+  code?: string;
+  title: string;
+  message: string;
+  actionLabel: string;
+  target: string;
+}
+
+export function UnauthorizedRedirect({
+  code = '403',
+  title,
+  message,
+  actionLabel,
+  target,
+}: UnauthorizedRedirectProps) {
   const router = useRouter();
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
 
   useEffect(() => {
     const redirectTimer = window.setTimeout(() => {
-      router.replace('/');
+      router.replace(target);
     }, REDIRECT_SECONDS * 1000);
 
     const countdownTimer = window.setInterval(() => {
@@ -24,21 +38,21 @@ export function UnauthorizedRedirect() {
       window.clearTimeout(redirectTimer);
       window.clearInterval(countdownTimer);
     };
-  }, [router]);
+  }, [router, target]);
 
   return (
     <div className="flex flex-1 items-center justify-center py-12">
       <section className="w-full max-w-md space-y-5 text-center">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">403</p>
-          <h1 className="text-2xl font-bold">无权访问</h1>
+          <p className="text-sm font-medium text-muted-foreground">{code}</p>
+          <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            你没有访问该页面的权限，系统将在 {secondsLeft} 秒后返回首页。
+            {message} 系统将在 {secondsLeft} 秒后自动跳转。
           </p>
         </div>
 
-        <Link href="/" className={buttonVariants()}>
-          立即返回首页
+        <Link href={target} className={buttonVariants()}>
+          {actionLabel}
         </Link>
       </section>
     </div>

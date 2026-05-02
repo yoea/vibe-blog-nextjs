@@ -20,7 +20,11 @@ export default async function EditPostPage({ params }: PageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?redirect=/posts-edit/${slug}`);
+  if (!user) {
+    redirect(
+      `/unauthorized?reason=login&redirect=${encodeURIComponent(`/posts-edit/${slug}`)}`,
+    );
+  }
 
   const { data: post, error } = await getPostBySlug(slug);
 
@@ -28,9 +32,7 @@ export default async function EditPostPage({ params }: PageProps) {
     notFound();
   }
 
-  if (user.id !== post.author_id) {
-    return <p className="text-destructive">无权编辑此文章</p>;
-  }
+  if (user.id !== post.author_id) redirect('/unauthorized');
 
   const suggestedTags = await getTopTags(10);
 
