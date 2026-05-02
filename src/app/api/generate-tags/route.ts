@@ -19,7 +19,7 @@ async function getAIConfig() {
 
 export async function POST(request: Request) {
   try {
-    const { title, content, existingTags } = await request.json();
+    const { title, content } = await request.json();
 
     if (!content || content.trim().length < 100) {
       return NextResponse.json(
@@ -37,7 +37,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const tagList = ((existingTags as string[]) ?? []).join('、') || '无';
+    // 从数据库获取全部已有标签
+    const supabase = await createClient();
+    const { data: allTags } = await supabase
+      .from('tags')
+      .select('name')
+      .order('name');
+    const tagList = (allTags ?? []).map((t) => t.name).join('、') || '无';
 
     const systemPrompt = `你是一名文章标签生成助手。根据文章标题和正文，生成 10 个标签。
 

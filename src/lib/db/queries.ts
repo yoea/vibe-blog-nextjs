@@ -95,12 +95,36 @@ export async function getPostBySlug(slug: string) {
     supabase.from('posts').select('*').eq('slug', slug).single(),
   ]);
 
-  if (postError) return { data: null, error: postError.message };
-  if (!post) return { data: null, error: '文章不存在' };
+  if (postError) {
+    // RLS 过滤导致的 PGRST116，检查文章是否真实存在
+    if ((postError as any).code === 'PGRST116') {
+      const admin = createAdminClient();
+      const { data: exists } = await admin
+        .from('posts')
+        .select('id, author_id, slug, published')
+        .eq('slug', slug)
+        .maybeSingle();
+      if (exists) {
+        if (!exists.published && (!user || user.id !== exists.author_id)) {
+          return {
+            data: { author_id: exists.author_id, slug: exists.slug } as any,
+            error: 'PERMISSION_DENIED',
+          };
+        }
+        // published=true but single() somehow failed — retry below by setting post = exists
+      }
+    }
+    if ((postError as any).code !== 'PGRST116') {
+      return { data: null, error: postError.message };
+    }
+  }
+  if (!post) {
+    return { data: null, error: '文章不存在' };
+  }
 
   // Allow viewing own draft posts
   if (!post.published && (!user || user.id !== post.author_id)) {
-    return { data: null, error: '文章不存在' };
+    return { data: post, error: 'PERMISSION_DENIED' };
   }
 
   // Fetch author settings, like count, comment count, user/IP like check, draft, and tags in parallel

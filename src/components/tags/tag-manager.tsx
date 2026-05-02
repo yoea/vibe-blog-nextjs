@@ -53,7 +53,7 @@ export function TagManager({
   const [newTagName, setNewTagName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TagWithCreator | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [sortBy, setSortBy] = useState<SortKey>('created_at');
+  const [sortBy, setSortBy] = useState<SortKey>('post_count');
   const router = useRouter();
 
   useEffect(() => {

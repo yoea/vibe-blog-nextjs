@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Globe, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PostEditor } from '@/components/blog/post-editor';
 import { ClearContentButton } from '@/components/blog/clear-content-button';
@@ -43,7 +43,20 @@ export function EditPageClient({ post, suggestedTags, from = 'post' }: Props) {
           <DeletePostButton postId={post.id} postTitle={post.title} />
         </div>
       </div>
-      <h1 className="text-3xl font-bold">编辑文章</h1>
+      <h1 className="text-3xl font-bold flex items-center gap-2">
+        编辑文章
+        {post.published ? (
+          <span className="inline-flex items-center gap-1 text-sm font-normal text-green-600">
+            <Globe className="h-4 w-4" />
+            公开
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-sm font-normal text-amber-500">
+            <Lock className="h-4 w-4" />
+            私密
+          </span>
+        )}
+      </h1>
       <PostEditor
         resetKey={editorKey}
         initialData={post as any}

@@ -80,9 +80,12 @@ export function PostActionBar({
             if (onCommentClick) {
               onCommentClick();
             } else {
-              document
-                .getElementById('comments')
-                ?.scrollIntoView({ behavior: 'smooth' });
+              const el = document.getElementById('comments');
+              el?.scrollIntoView({ behavior: 'smooth' });
+              setTimeout(() => {
+                const textarea = el?.querySelector('textarea');
+                textarea?.focus();
+              }, 400);
             }
           }}
         >

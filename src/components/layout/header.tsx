@@ -15,6 +15,8 @@ import {
   SunMoon,
   Home,
   User,
+  Users,
+  Tags,
   Search,
 } from 'lucide-react';
 import { useTheme, type ThemeMode } from '@/components/layout/theme-provider';
@@ -179,6 +181,22 @@ export function Header({
         <Home className="h-4 w-4" />
         <span>首页</span>
       </Link>
+      <Link
+        href="/author"
+        onClick={() => setMenuOpen(false)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors"
+      >
+        <Users className="h-4 w-4" />
+        <span>作者</span>
+      </Link>
+      <Link
+        href="/tags"
+        onClick={() => setMenuOpen(false)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors"
+      >
+        <Tags className="h-4 w-4" />
+        <span>标签</span>
+      </Link>
       {user ? (
         <>
           <Link
@@ -187,7 +205,7 @@ export function Header({
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-md transition-colors"
           >
             <User className="h-4 w-4" />
-            <span>个人中心</span>
+            <span>我的</span>
           </Link>
           <Link
             href="/settings"

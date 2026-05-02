@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function SiteHero() {
   const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? 'Blog';
-  const siteDescription =
+  const fallbackDesc =
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ?? '简洁美观的多人博客平台';
   const { count: viewsCount } = await getSiteViewsCount();
   const { count: likesCount } = await getSiteLikesCount();
@@ -19,11 +19,18 @@ export async function SiteHero() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // 读取管理员的 MOTD 作为网站副标题
+  const { data: adminSettings } = await supabase
+    .from('user_settings')
+    .select('motd')
+    .eq('is_admin', true)
+    .maybeSingle();
+  const siteDescription = adminSettings?.motd || fallbackDesc;
+
   return (
-    <section className="text-center py-10 space-y-3 mb-8 md:mb-0">
-      <img src="/logo.svg" alt="" className="h-16 w-16 mx-auto" />
-      <h1 className="text-3xl font-bold">{siteTitle}</h1>
-      <p className="text-muted-foreground">{siteDescription}</p>
+    <section className="text-center py-6 space-y-2 mb-4">
+      <h1 className="text-2xl font-bold">{siteTitle}</h1>
+      <p className="text-muted-foreground text-sm">{siteDescription}</p>
 
       <div className="flex items-center justify-center gap-4 text-muted-foreground select-none">
         <SiteStats initialViews={viewsCount} initialLikes={likesCount} />

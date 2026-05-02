@@ -468,6 +468,7 @@ create policy "avatars_owner_delete"
 -- ============================================
 
 alter table user_settings add column if not exists github_username text;
+alter table user_settings add column if not exists motd varchar(40);
 
 -- Backfill existing GitHub users
 update user_settings us

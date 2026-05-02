@@ -48,7 +48,7 @@ export default async function ProfilePage() {
   // Fetch user settings
   const { data: userSettings } = await supabase
     .from('user_settings')
-    .select('display_name, avatar_url, github_id')
+    .select('display_name, avatar_url, github_id, motd')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -57,6 +57,7 @@ export default async function ProfilePage() {
     user.email?.split('@')[0] ??
     user.id.slice(0, 8);
   const avatarUrl = userSettings?.avatar_url ?? null;
+  const motd = userSettings?.motd ?? null;
   const createdAt = user.created_at ?? null;
 
   // Fetch posts
@@ -107,6 +108,7 @@ export default async function ProfilePage() {
           avatarUrl={avatarUrl}
           email={user.email ?? null}
           emailVerified={!!user.email_confirmed_at}
+          motd={motd}
           createdAt={createdAt}
           isAdmin={isAdmin}
           isGitHubUser={isGitHubUser}

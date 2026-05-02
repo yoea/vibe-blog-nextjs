@@ -37,6 +37,7 @@ interface Props {
   avatarUrl: string | null;
   email: string | null;
   emailVerified: boolean;
+  motd: string | null;
   createdAt: string | null;
   isAdmin: boolean;
   isGitHubUser: boolean;
@@ -52,6 +53,7 @@ export function ProfileInfoCard({
   avatarUrl,
   email,
   emailVerified,
+  motd,
   createdAt,
   isAdmin,
   isGitHubUser,
@@ -63,6 +65,9 @@ export function ProfileInfoCard({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(displayName);
   const [saving, setSaving] = useState(false);
+  const [motdValue, setMotdValue] = useState(motd ?? '');
+  const [editingMotd, setEditingMotd] = useState(false);
+  const [savingMotd, setSavingMotd] = useState(false);
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
   const avatarRef = useRef<AvatarUploaderHandle>(null);
@@ -238,6 +243,85 @@ export function ProfileInfoCard({
               <span className="text-xs text-muted-foreground">
                 加入 {createdAt ? formatDaysAgo(createdAt) : '-'}
               </span>
+            </div>
+            {/* MOTD 副标题 */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground shrink-0">
+                副标题
+              </span>
+              {editingMotd ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={motdValue}
+                    onChange={(e) => setMotdValue(e.target.value.slice(0, 40))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setMotdValue(motd ?? '');
+                        setEditingMotd(false);
+                      }
+                      if (e.key === 'Enter') {
+                        (async () => {
+                          setSavingMotd(true);
+                          const res = await updateUserSettings(
+                            displayName,
+                            motdValue.trim() || '',
+                          );
+                          setSavingMotd(false);
+                          if (res.error) {
+                            toast.error(res.error);
+                          } else {
+                            setEditingMotd(false);
+                            toast.success('副标题已更新');
+                            router.refresh();
+                          }
+                        })();
+                      }
+                    }}
+                    maxLength={40}
+                    placeholder="介绍你自己或这个网站..."
+                    className="px-1.5 py-0.5 text-xs rounded border bg-transparent focus:outline-none focus:ring-2 focus:ring-ring w-52"
+                    autoFocus
+                  />
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {motdValue.length}/40
+                  </span>
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {motd || '未设置'}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={async () => {
+                  if (editingMotd) {
+                    setSavingMotd(true);
+                    const res = await updateUserSettings(
+                      displayName,
+                      motdValue.trim() || '',
+                    );
+                    setSavingMotd(false);
+                    if (res.error) {
+                      toast.error(res.error);
+                    } else {
+                      setEditingMotd(false);
+                      toast.success('副标题已更新');
+                      router.refresh();
+                    }
+                  } else {
+                    setEditingMotd(true);
+                  }
+                }}
+                disabled={savingMotd}
+                className="p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                title={editingMotd ? '保存' : '编辑副标题'}
+              >
+                {editingMotd ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Edit3 className="h-3.5 w-3.5" />
+                )}
+              </button>
             </div>
             {/* GitHub 绑定状态（仅 GitHub 登录用户显示） */}
             {isGitHubUser && (

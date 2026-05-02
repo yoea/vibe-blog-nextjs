@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation';
 import { MarkdownPreview } from '@/components/shared/markdown-preview';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { savePost } from '@/lib/actions/post-actions';
 import { useAutoSave, type AutoSaveStatus } from '@/lib/hooks/use-auto-save';
 import { toast } from 'sonner';
@@ -63,7 +70,15 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
   const [content, setContent] = useState(
     draftData?.content ?? initialData?.content ?? '',
   );
-  const [published, setPublished] = useState(initialData?.published ?? false);
+  const [published, setPublished] = useState(
+    initialData?.published ??
+      (typeof window !== 'undefined' &&
+        localStorage.getItem('lastPublishMode') === 'public'),
+  );
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishSaving, setPublishSaving] = useState<
+    'public' | 'private' | null
+  >(null);
   const [excerpt, setExcerpt] = useState(
     draftData?.excerpt ?? initialData?.excerpt ?? '',
   );
@@ -201,11 +216,10 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
     setTagCooldown(true);
 
     try {
-      const existingNames = (suggestedTags ?? []).map((t) => t.name);
       const res = await fetch('/api/generate-tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, existingTags: existingNames }),
+        body: JSON.stringify({ title, content }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -275,13 +289,22 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
       toast.error('请输入正文内容');
       return;
     }
+    setShowPublishModal(true);
+  };
 
-    const formData = new FormData(e.currentTarget);
+  const confirmPublish = async (shouldPublish: boolean) => {
+    setPublishSaving(shouldPublish ? 'public' : 'private');
+    setPublished(shouldPublish);
+    localStorage.setItem(
+      'lastPublishMode',
+      shouldPublish ? 'public' : 'private',
+    );
+
+    const formData = new FormData();
     formData.set('title', title);
     formData.set('content', content);
     formData.set('excerpt', excerpt);
-    formData.set('published', published ? 'on' : 'off');
-    // 自动收录已输入但未按回车的标签
+    formData.set('published', shouldPublish ? 'on' : 'off');
     const finalTags = [...tags];
     const pendingTag = tagInput.trim();
     if (pendingTag && !finalTags.includes(pendingTag) && finalTags.length < 7) {
@@ -289,15 +312,20 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
     }
     formData.set('tags', JSON.stringify(finalTags));
     formData.set('_slug', slug ?? initialData?.slug ?? '');
-    // For new posts that have been auto-saved, pass the post ID
-    if (!isEditing && postId && slug) {
+    if (isEditing) {
+      formData.set('_mode', 'update');
+      formData.set('_id', initialData?.id ?? '');
+    } else if (postId && slug) {
       formData.set('_mode', 'update');
       formData.set('_id', postId);
     }
     const result = await savePost(formData);
+    setPublishSaving(null);
     if (result.error) {
       setError(result.error);
+      setShowPublishModal(false);
     } else {
+      setShowPublishModal(false);
       router.push('/profile');
       router.refresh();
     }
@@ -588,17 +616,6 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
               needsSave={needsSave}
               onRetry={retry}
             />
-            <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-xs font-medium text-muted-foreground select-none">
-                {published ? '公开' : '私密'}
-              </span>
-              <input
-                type="hidden"
-                name="published"
-                value={published ? 'on' : 'off'}
-              />
-              <Switch checked={published} onChange={setPublished} />
-            </label>
           </div>
         </div>
 
@@ -662,6 +679,36 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
+
+      <Dialog open={showPublishModal} onOpenChange={setShowPublishModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>您要公开此文章吗？</DialogTitle>
+            <DialogDescription className="pt-2">
+              公开发布的文章会出现在首页和您的作者主页，所有人都可以查看。
+              <br />
+              私密文章仅您自己可以在个人中心查看。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              disabled={publishSaving !== null}
+              onClick={() => confirmPublish(false)}
+            >
+              {publishSaving === 'private' ? '保存中...' : '自己可见'}
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={publishSaving !== null}
+              onClick={() => confirmPublish(true)}
+            >
+              {publishSaving === 'public' ? '保存中...' : '公开发布'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {fullscreen && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col">

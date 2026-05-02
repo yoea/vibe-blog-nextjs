@@ -1,10 +1,8 @@
 import { getPostBySlug, getCommentsForPost } from '@/lib/db/queries';
 import { notFound } from 'next/navigation';
 import { MarkdownPreview } from '@/components/shared/markdown-preview';
-import {
-  PostInteraction,
-  PostActionBar,
-} from '@/components/blog/post-interaction';
+import { PostActionBar } from '@/components/blog/post-interaction';
+import { CommentSection } from '@/components/blog/comment-section';
 import { ArchivePostButton } from '@/components/blog/archive-post-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -50,7 +48,28 @@ export default async function PostPage({ params, searchParams }: PageProps) {
   const { ref } = await searchParams;
   const { data: post, error } = await getPostBySlug(slug);
 
-  if (!post || error) {
+  if (!post) {
+    notFound();
+  }
+
+  if (error === 'PERMISSION_DENIED') {
+    return (
+      <div className="text-center py-20 space-y-4">
+        <h1 className="text-2xl font-bold">暂未开放查看权限</h1>
+        <p className="text-muted-foreground">
+          这篇文章已被作者设为私密，仅作者本人可查看。
+        </p>
+        <Link
+          href={`/author/${post.author_id}`}
+          className="text-sm text-primary hover:underline inline-block"
+        >
+          前往作者主页 →
+        </Link>
+      </div>
+    );
+  }
+
+  if (error) {
     notFound();
   }
 
@@ -149,9 +168,18 @@ export default async function PostPage({ params, searchParams }: PageProps) {
               {post.excerpt}
             </p>
           )}
-          {post.tags && post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {post.tags.map((tag) => (
+        </header>
+
+        <Separator />
+
+        <div className="py-6">
+          <MarkdownPreview content={post.content} />
+        </div>
+
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-2">
+            {post.tags.map(
+              (tag: { name: string; slug: string; color: string | null }) => (
                 <Link
                   key={tag.slug}
                   href={`/tags/${encodeURIComponent(tag.slug)}`}
@@ -163,30 +191,21 @@ export default async function PostPage({ params, searchParams }: PageProps) {
                 >
                   {tag.name}
                 </Link>
-              ))}
-            </div>
-          )}
-        </header>
+              ),
+            )}
+          </div>
+        )}
 
-        <Separator />
+        <Separator className="mt-4 mb-6" />
 
-        <div className="py-6">
-          <MarkdownPreview content={post.content} />
-        </div>
+        <h2 className="text-xl font-bold mb-4">评论</h2>
 
-        <Separator />
-
-        <PostInteraction
+        <CommentSection
           postId={post.id}
           postAuthorId={post.author_id}
           currentUserId={currentUserId}
-          initialLikeCount={post.like_count}
-          isLiked={post.is_liked_by_current_user}
-          initialCommentCount={post.comment_count}
           initialComments={comments ?? []}
           initialTotal={totalComments ?? 0}
-          shareUrl={`${await getSiteUrl()}/posts/${post.slug}`}
-          published={post.published}
         />
       </article>
     </div>
