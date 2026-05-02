@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { deleteAccount } from '@/lib/actions/auth-actions';
+import { deleteAccount, onAuthChange } from '@/lib/actions/auth-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -105,6 +105,7 @@ export function SettingsForm({
       }
     });
 
+    await onAuthChange();
     toast.success('已退出登录');
     window.location.href = '/login';
   };

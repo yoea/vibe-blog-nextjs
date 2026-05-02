@@ -4,6 +4,7 @@ import { useFormStatus } from 'react-dom';
 import { createClient } from '@/lib/supabase/client';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { onAuthChange } from '@/lib/actions/auth-actions';
 import { GitHubIcon } from '@/components/icons/github-icon';
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
@@ -44,6 +45,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         setError(message);
         toast.error(message);
       } else {
+        await onAuthChange();
         window.location.href = redirectTo || '/';
       }
     } catch (err) {

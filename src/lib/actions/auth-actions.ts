@@ -50,3 +50,8 @@ export async function deleteAccount(): Promise<ActionResult> {
   supabase.auth.signOut().catch(() => {});
   return {};
 }
+
+export async function onAuthChange(): Promise<void> {
+  revalidatePath('/', 'layout');
+  revalidatePath('/author');
+}

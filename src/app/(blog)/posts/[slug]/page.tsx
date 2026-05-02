@@ -13,6 +13,7 @@ import { buildRefBreadcrumb } from '@/lib/constants';
 import { formatTimeAgo } from '@/lib/utils/time';
 import { createClient } from '@/lib/supabase/server';
 import { isSuperAdmin } from '@/lib/utils/admin';
+import { getSiteUrl } from '@/lib/site-url';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -26,9 +27,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const { data: post } = await getPostBySlug(slug);
   if (!post) return { title: '文章不存在' };
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    `http://localhost:${process.env.PORT || 3000}`;
+  const siteUrl = await getSiteUrl();
   return {
     title: post.title,
     openGraph: {
@@ -157,7 +156,7 @@ export default async function PostPage({ params, searchParams }: PageProps) {
           initialCommentCount={post.comment_count}
           initialComments={comments ?? []}
           initialTotal={totalComments ?? 0}
-          shareUrl={`${process.env.NEXT_PUBLIC_SITE_URL ?? `http://localhost:${process.env.PORT || 3000}`}/posts/${post.slug}`}
+          shareUrl={`${await getSiteUrl()}/posts/${post.slug}`}
           published={post.published}
           editButton={
             currentUserId === post.author_id ? (

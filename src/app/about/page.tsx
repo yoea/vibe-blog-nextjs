@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { getBuildInfo } from '@/lib/build-info';
 import { createClient } from '@/lib/supabase/server';
-import { ExternalLink, Code } from 'lucide-react';
+import { GitFork } from 'lucide-react';
+import { GitHubIcon } from '@/components/icons/github-icon';
 
 export const metadata: Metadata = {
   title: '关于本站',
@@ -22,12 +23,12 @@ export default async function AboutPage() {
     {
       label: 'GitHub',
       url: 'https://github.com/yoea/vibe_blog_next',
-      icon: <Code className="h-4 w-4" />,
+      icon: <GitHubIcon className="h-4 w-4" />,
     },
     {
       label: 'Gitee',
       url: 'https://git.ewing.top/yoea/vibe_blog_next',
-      icon: <ExternalLink className="h-4 w-4" />,
+      icon: <GitFork className="h-4 w-4" />,
     },
   ];
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
+import { getSiteUrl } from '@/lib/site-url';
 import '@/app/globals.css';
 import 'nprogress/nprogress.css';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -28,7 +29,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteDescription =
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ??
     'A blog built with Supabase and Next.js';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = await getSiteUrl();
   return {
     title: {
       default: siteTitle,

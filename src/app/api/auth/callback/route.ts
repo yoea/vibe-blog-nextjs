@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSiteUrl } from '@/lib/site-url';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -82,9 +83,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    `http://localhost:${process.env.PORT || 3000}`;
+  const siteUrl = await getSiteUrl();
 
   // When forwarded from the proxy (code detected without callback path),
   // use the explicit redirect_to parameter instead of guessing the type.
