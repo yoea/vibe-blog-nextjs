@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 export default async function ArchivePage({ searchParams }: PageProps) {
-  if (!(await isSuperAdmin())) redirect('/?access_denied=1');
+  if (!(await isSuperAdmin())) redirect('/unauthorized');
 
   const { q, page: pageParam } = await searchParams;
   const search = q?.trim() ?? '';
