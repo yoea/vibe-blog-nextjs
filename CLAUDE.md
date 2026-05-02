@@ -2,7 +2,7 @@
 
 为 Claude Code (claude.ai/code) 提供的项目指引。
 
-##  语言偏好
+## 语言偏好
 
 - 使用简体中文回复。
 
@@ -64,30 +64,30 @@ npm run deploy:local    # 本地构建 + 上传部署
 
 ### 路由结构
 
-| 路由分组  | 页面                                                                       |
-| --------- | -------------------------------------------------------------------------- |
-| `(auth)/` | login, register, settings (需登录)                                         |
-| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], profile, tags, tags/[slug] |
-| `author/` | 作者列表, author/[authorId] (个人页 + 留言板)                              |
-| 其他       | about, legal, privacy, sitemap, maintenance, unauthorized                  |
-| `admin/`  | archive (归档管理)                                                          |
+| 路由分组  | 页面                                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| `(auth)/` | login, register, settings (需登录)                                                                     |
+| `(blog)/` | 首页, posts/[slug] (详情), posts/new, posts-edit/[slug], profile, tags, tags/[slug]                    |
+| `author/` | 作者列表, author/[authorId] (个人页 + 留言板)                                                          |
+| 其他      | about, legal, privacy, sitemap, maintenance, unauthorized                                              |
+| `admin/`  | archive (归档管理)                                                                                     |
 | `api/`    | auth/callback, check-like, generate-summary, generate-tags, healthz, my-ip, search, shares, site-stats |
 
 ### 目录结构 (src/)
 
-| 路径                     | 用途                                                  |
-| ------------------------ | ----------------------------------------------------- |
-| `lib/supabase/client.ts` | `createBrowserClient` — 浏览器端 (client components)  |
-| `lib/supabase/server.ts` | `createServerClient` — 服务端组件 & Server Actions    |
-| `lib/supabase/admin.ts`  | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
-| `lib/supabase/middleware.ts` | `updateSession()` — 每个请求的 cookie 管理         |
-| `lib/actions/`            | Server Actions — 文章、评论、点赞、认证、设置等       |
-| `lib/db/`                 | 数据库查询 (queries.ts) 与类型定义 (types.ts)         |
-| `lib/utils/`              | 工具函数 — 剪贴板、颜色、时间、频率限制、日志等       |
-| `lib/hooks/`              | 客户端 hooks — 自动保存草稿                           |
-| `lib/build-info.ts`       | 构建元数据（版本、commit、时间等）                    |
-| `lib/constants.ts`        | 常量定义                                              |
-| `lib/site-url.ts`         | 站点 URL 解析工具                                     |
+| 路径                         | 用途                                                  |
+| ---------------------------- | ----------------------------------------------------- |
+| `lib/supabase/client.ts`     | `createBrowserClient` — 浏览器端 (client components)  |
+| `lib/supabase/server.ts`     | `createServerClient` — 服务端组件 & Server Actions    |
+| `lib/supabase/admin.ts`      | Service Role 客户端 — 管理员操作 (列出用户、删除账号) |
+| `lib/supabase/middleware.ts` | `updateSession()` — 每个请求的 cookie 管理            |
+| `lib/actions/`               | Server Actions — 文章、评论、点赞、认证、设置等       |
+| `lib/db/`                    | 数据库查询 (queries.ts) 与类型定义 (types.ts)         |
+| `lib/utils/`                 | 工具函数 — 剪贴板、颜色、时间、频率限制、日志等       |
+| `lib/hooks/`                 | 客户端 hooks — 自动保存草稿                           |
+| `lib/build-info.ts`          | 构建元数据（版本、commit、时间等）                    |
+| `lib/constants.ts`           | 常量定义                                              |
+| `lib/site-url.ts`            | 站点 URL 解析工具                                     |
 
 ### 数据流
 
@@ -135,12 +135,12 @@ npm run deploy:local    # 本地构建 + 上传部署
 | `NEXT_PUBLIC_SITE_TITLE`               | 是   | 客户端+服务端 |
 | `NEXT_PUBLIC_SITE_URL`                 | 是   | 客户端+服务端 |
 | `NEXT_PUBLIC_SITE_DESCRIPTION`         | 否   | 客户端+服务端 |
-| `NEXT_PUBLIC_BUILD_VERSION`           | 否   | 构建时注入    |
-| `NEXT_PUBLIC_BUILD_COMMIT`            | 否   | 构建时注入    |
-| `NEXT_PUBLIC_BUILD_COMMIT_COUNT`      | 否   | 构建时注入    |
-| `NEXT_PUBLIC_BUILD_CONTRIBUTORS`      | 否   | 构建时注入    |
-| `NEXT_PUBLIC_BUILD_TIME`              | 否   | 构建时注入    |
-| `NEXT_PUBLIC_BUILD_HOST`              | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_VERSION`            | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_COMMIT`             | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_COMMIT_COUNT`       | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_CONTRIBUTORS`       | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_TIME`               | 否   | 构建时注入    |
+| `NEXT_PUBLIC_BUILD_HOST`               | 否   | 构建时注入    |
 
 > AI 配置（API Key、Base URL、Model）已迁移到数据库 `site_config` 表，通过管理后台设置页面管理，不再使用环境变量。
 

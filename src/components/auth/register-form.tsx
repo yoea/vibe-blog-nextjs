@@ -54,7 +54,10 @@ export function RegisterForm() {
 
     const supabase = createClient();
     try {
-      const { error: err } = await supabase.auth.signUp({ email, password: pwd });
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password: pwd,
+      });
       setLoading(false);
 
       if (err) {

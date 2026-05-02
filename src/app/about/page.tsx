@@ -44,7 +44,8 @@ export default async function AboutPage() {
             构建的开源博客平台，不止是写作工具，更是读者与作者交流的空间。
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            项目以 AGPL-3.0 协议开源，代码完全透明。你可以自由部署、修改和参与贡献。
+            项目以 AGPL-3.0
+            协议开源，代码完全透明。你可以自由部署、修改和参与贡献。
           </p>
         </section>
 
@@ -99,26 +100,26 @@ export default async function AboutPage() {
               <li>
                 <code className="font-mono text-xs bg-muted px-1 rounded">
                   remark-gfm
-                </code>
-                {' '}— 表格、任务列表、删除线、自动链接
+                </code>{' '}
+                — 表格、任务列表、删除线、自动链接
               </li>
               <li>
                 <code className="font-mono text-xs bg-muted px-1 rounded">
                   remark-breaks
-                </code>
-                {' '}— 单换行即换行（无需末尾两个空格）
+                </code>{' '}
+                — 单换行即换行（无需末尾两个空格）
               </li>
               <li>
                 <code className="font-mono text-xs bg-muted px-1 rounded">
                   rehype-highlight
-                </code>
-                {' '}— 代码块语法高亮（github-dark-dimmed 主题，支持 190+ 语言）
+                </code>{' '}
+                — 代码块语法高亮（github-dark-dimmed 主题，支持 190+ 语言）
               </li>
               <li>
                 <code className="font-mono text-xs bg-muted px-1 rounded">
                   rehype-sanitize
-                </code>
-                {' '}— 输出内容安全过滤，防止 XSS 攻击
+                </code>{' '}
+                — 输出内容安全过滤，防止 XSS 攻击
               </li>
             </ul>
           </div>
@@ -129,7 +130,8 @@ export default async function AboutPage() {
           <h2 className="text-lg font-semibold">缓存与性能</h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1.5">
             <p>
-              为缓解 Supabase Free Tier 冷启动延迟，公开页面启用 ISR（增量静态再生成）：
+              为缓解 Supabase Free Tier 冷启动延迟，公开页面启用
+              ISR（增量静态再生成）：
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-xs border">
@@ -147,7 +149,9 @@ export default async function AboutPage() {
                     <td className="px-3 py-1.5">revalidate = 300</td>
                   </tr>
                   <tr>
-                    <td className="px-3 py-1.5 font-mono">文章详情 /posts/[slug]</td>
+                    <td className="px-3 py-1.5 font-mono">
+                      文章详情 /posts/[slug]
+                    </td>
                     <td className="px-3 py-1.5">5 分钟</td>
                     <td className="px-3 py-1.5">revalidate = 300</td>
                   </tr>
@@ -163,8 +167,8 @@ export default async function AboutPage() {
               发布或修改文章后，
               <code className="font-mono text-xs bg-muted px-1 rounded">
                 revalidatePath
-              </code>
-              {' '}自动清除相关缓存，确保读者看到最新内容。点赞与评论通过 Server
+              </code>{' '}
+              自动清除相关缓存，确保读者看到最新内容。点赞与评论通过 Server
               Actions + 乐观 UI 处理，不受服务端缓存影响。
             </p>
           </div>
@@ -210,12 +214,14 @@ export default async function AboutPage() {
             </p>
             <ul className="list-disc list-inside space-y-1">
               <li>
-                <span className="font-medium text-foreground">摘要生成</span>
-                {' '}— 基于标题与正文提炼核心观点，输出 140 字以内的精炼摘要，作为文章预览展示。
+                <span className="font-medium text-foreground">摘要生成</span> —
+                基于标题与正文提炼核心观点，输出 140
+                字以内的精炼摘要，作为文章预览展示。
               </li>
               <li>
-                <span className="font-medium text-foreground">标签推荐</span>
-                {' '}— 分析文章主题输出 4 个主标签 + 6 个备选标签，匹配站点常用标签的自动填入，其余放入备选区手动选择。
+                <span className="font-medium text-foreground">标签推荐</span> —
+                分析文章主题输出 4 个主标签 + 6
+                个备选标签，匹配站点常用标签的自动填入，其余放入备选区手动选择。
               </li>
             </ul>
             <p>
