@@ -48,6 +48,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       } else {
         loggedIn = true;
         try {
+          toast.success("登录成功！");
           await onAuthChange();
         } catch {
           // onAuthChange 失败不影响登录流程，继续导航
@@ -56,7 +57,6 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       }
     } catch (err) {
       if (loggedIn) {
-        toast.success("登录成功！");
         window.location.href = redirectTo || '/';
         return;
       }
