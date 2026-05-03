@@ -56,6 +56,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       }
     } catch (err) {
       if (loggedIn) {
+        toast.success("登录成功！");
         window.location.href = redirectTo || '/';
         return;
       }

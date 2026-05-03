@@ -89,9 +89,14 @@ export function RegisterForm() {
             注册成功！
           </p>
           <p className="text-sm text-green-700">
-            请检查邮箱完成验证后即可登录。
+            您现在可以直接登录。
           </p>
-          <p className="text-sm text-green-700">如果未收到邮件。</p>
+          <p className="text-sm text-green-700">
+            如果无法登录，请检查邮箱完成验证后即可登录。
+          </p>
+          <p className="text-sm text-green-700">
+            若未收到邮件，请联系网站管理员。
+            </p>
           <Button
             variant="outline"
             onClick={() => (window.location.href = '/login')}
