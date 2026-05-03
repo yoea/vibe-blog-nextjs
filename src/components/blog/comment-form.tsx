@@ -94,6 +94,7 @@ export function CommentForm({
       <Textarea
         ref={inputRef}
         autoFocus={!!replyTo}
+        className="scroll-mt-20"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         onKeyDown={(e) => {

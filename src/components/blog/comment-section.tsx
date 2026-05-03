@@ -84,7 +84,11 @@ export function CommentSection({
 
   useEffect(() => {
     if (focusSignal && inputRef.current) {
-      inputRef.current.focus();
+      const el = document.getElementById('comments');
+      el?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        inputRef.current?.focus({ preventScroll: true });
+      }, 400);
     }
   }, [focusSignal]);
 
