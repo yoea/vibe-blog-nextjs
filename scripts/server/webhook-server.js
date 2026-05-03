@@ -36,27 +36,20 @@ loadEnvFile();
 const SECRET = process.env.WEBHOOK_SECRET || null;
 const DEPLOY_DIR = process.env.SERVER_DIR || process.cwd();
 
-// 获取本地时间字符串 (UTC+8)
-function localTime() {
-  return new Date().toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai',
-    hour12: false,
-  });
-}
 
 function pullOnly() {
-  console.log(`[${localTime()}] 执行 git pull 拉取最新代码...`);
+  console.log('执行 git pull 拉取最新代码...');
   const proc = spawn(
     'bash',
     ['-c', 'git fetch origin && git reset --hard origin/main'],
     { cwd: DEPLOY_DIR, stdio: 'inherit' },
   );
   proc.on('error', (err) => {
-    console.error(`[${localTime()}] git pull spawn 失败: ${err.message}`);
+    console.error(`git pull spawn 失败: ${err.message}`);
   });
   proc.on('exit', (code) => {
     if (code === 0) {
-      console.log(`[${localTime()}] git pull 完成，代码已更新至最新`);
+      console.log(`git pull 完成，代码已更新至最新`);
       // scripts\new-blog-deploy.sh部署的情况下执行 post-pull 钩子（需且钩子存在）
       const hookPath = path.join(
         DEPLOY_DIR,
@@ -68,7 +61,7 @@ function pullOnly() {
         process.env.WEBHOOK_AUTO_BUILD === 'true' &&
         fs.existsSync(hookPath)
       ) {
-        console.log(`[${localTime()}] 执行 post-pull 钩子...`);
+        console.log(`执行 post-pull 钩子...`);
         const hook = spawn('bash', [hookPath], {
           cwd: DEPLOY_DIR,
           stdio: 'inherit',
@@ -76,15 +69,15 @@ function pullOnly() {
         });
         hook.on('error', (err) =>
           console.error(
-            `[${localTime()}] post-pull 钩子执行失败: ${err.message}`,
+            `post-pull 钩子执行失败: ${err.message}`,
           ),
         );
         hook.on('exit', (hc) =>
-          console.log(`[${localTime()}] post-pull 钩子退出 (exit ${hc})`),
+          console.log(`post-pull 钩子退出 (exit ${hc})`),
         );
       }
     } else {
-      console.error(`[${localTime()}] git pull 失败 (exit ${code})`);
+      console.error(`git pull 失败 (exit ${code})`);
     }
   });
 }
@@ -133,7 +126,7 @@ const server = http.createServer((req, res) => {
       }
     }
 
-    console.log(`[${localTime()}] 收到 webhook 请求`);
+    console.log(`收到 webhook 请求`);
 
     // 解析推送事件信息（GitHub / Gitee 格式兼容）
     let ref = '';
@@ -164,7 +157,7 @@ const server = http.createServer((req, res) => {
     // Tag 推送不再触发自动部署（已改为本地构建上传），仅记录日志
     if (isTagPush) {
       console.log(
-        `[${localTime()}] Tag 推送: ${ref}（已改为本地部署，不触发自动构建）`,
+        `Tag 推送: ${ref}（已改为本地部署，不触发自动构建）`,
       );
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
@@ -182,7 +175,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ status: 'pulling', ...eventInfo }));
 
     console.log(
-      `[${localTime()}] 分支推送，拉取代码（${eventInfo.repository} ${eventInfo.branch} by ${eventInfo.pusher}）`,
+      `分支推送，拉取代码（${eventInfo.repository} ${eventInfo.branch} by ${eventInfo.pusher}）`,
     );
     pullOnly();
   });
