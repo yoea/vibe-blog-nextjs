@@ -417,11 +417,19 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
                     <path d="M17 19h4" />
                   </svg>
                 )}
-                {summaryLoading
-                  ? '生成中...'
-                  : excerpt
-                    ? '重新生成摘要'
-                    : 'AI 生成摘要'}
+                {summaryLoading ? (
+                  <>
+                    <span className="hidden sm:inline">生成中...</span>
+                  </>
+                ) : excerpt ? (
+                  <>
+                    <span className="hidden sm:inline">重新生成摘要</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">AI 生成摘要</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -500,18 +508,23 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
                     <path d="M17 19h4" />
                   </svg>
                 )}
-                {tagGenerating ? '生成中...' : 'AI 推荐标签'}
+                {tagGenerating ? (
+                  <span className="hidden sm:inline">生成中...</span>
+                ) : (
+                  <span className="hidden sm:inline">AI 推荐标签</span>
+                )}
               </button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
             按 Enter 添加标签，最多 7 个
-            {suggestedTags && suggestedTags.length > 0 && (
-              <span className="ml-2">
-                常用标签：
-                {suggestedTags
-                  .filter((t) => !tags.includes(t.name))
-                  .map((tag) => (
+          </p>
+          {suggestedTags && suggestedTags.length > 0 && (
+            <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-1 gap-y-0.5">
+              常用标签：
+              {suggestedTags
+                .filter((t) => !tags.includes(t.name))
+                .map((tag) => (
                     <button
                       key={tag.slug}
                       type="button"
@@ -525,10 +538,9 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
                     >
                       {tag.name}
                     </button>
-                  ))}
-              </span>
-            )}
-          </p>
+              ))}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-transparent min-h-[2.25rem] focus-within:ring-2 focus-within:ring-ring">
             {tags.map((tag, i) => (
               <span
@@ -561,7 +573,7 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
                   }
                 }}
                 placeholder={tags.length === 0 ? '添加标签...' : ''}
-                className="flex-1 min-w-[80px] bg-transparent text-sm focus:outline-none"
+                className="flex-1 min-w-[80px] bg-transparent text-base sm:text-sm focus:outline-none"
               />
             )}
           </div>
@@ -690,7 +702,7 @@ export function PostEditor({ initialData, suggestedTags, resetKey }: Props) {
               私密文章仅您自己可以在个人中心查看。
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               variant="outline"
               className="flex-1"
