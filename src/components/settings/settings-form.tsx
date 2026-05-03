@@ -35,6 +35,8 @@ import {
   ShieldCheck,
   Loader2,
   Archive,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { useTheme, type ThemeMode } from '@/components/layout/theme-provider';
 import { DonateButton } from '@/components/donate-button';
@@ -43,6 +45,7 @@ import {
   updateAIConfig,
   updateICPConfig,
   toggleDeployNotify,
+  saveAIModels,
 } from '@/lib/actions/admin-actions';
 
 interface Props {
@@ -52,6 +55,7 @@ interface Props {
   aiBaseUrl?: string;
   aiApiKey?: string;
   aiModel?: string;
+  aiModels?: string[];
   icpNumber?: string;
   icpVisible?: boolean;
   showDeployNotify?: boolean;
@@ -64,6 +68,7 @@ export function SettingsForm({
   aiBaseUrl: initialAiBaseUrl,
   aiApiKey: initialAiApiKey,
   aiModel: initialAiModel,
+  aiModels: initialAiModels,
   icpNumber: initialIcpNumber,
   icpVisible: initialIcpVisible,
   showDeployNotify: initialShowDeployNotify,
@@ -79,17 +84,23 @@ export function SettingsForm({
   const [aiApiKey, setAiApiKey] = useState(initialAiApiKey ?? '');
   const [aiModel, setAiModel] = useState(initialAiModel ?? '');
   const [showAiKey, setShowAiKey] = useState(false);
-  const [customModels, setCustomModels] = useState<string[]>([]);
+  const [customModels, setCustomModels] = useState<string[]>(initialAiModels ?? []);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [newModelInput, setNewModelInput] = useState('');
+  const [aiTestResult, setAiTestResult] = useState<{
+    loading: boolean;
+    success?: boolean;
+    models?: string[];
+    error?: string;
+  } | null>(null);
 
-  const presetModels = ['deepseek-v4-flash', 'deepseek-v4-pro'];
+  const presetModels: string[] = [];
 
   const maskApiKey = (key: string) => {
     if (key.length <= 10) return key;
     const head = key.slice(0, 6);
     const tail = key.slice(-4);
-    return head + '*'.repeat(key.length - 10) + tail;
+    return head + '****' + tail;
   };
   const [icpNumber, setIcpNumber] = useState(initialIcpNumber ?? '');
   const [icpVisible, setIcpVisible] = useState(initialIcpVisible ?? false);
@@ -107,10 +118,10 @@ export function SettingsForm({
 
   useEffect(() => {
     setStickyHeader(localStorage.getItem('header_sticky') === 'true');
-    // 初始化自定义模型列表：如果当前模型不在预设列表中，加入自定义列表
+    // 如果当前模型不在自定义列表中，补充进去
     if (initialAiModel && !presetModels.includes(initialAiModel)) {
       setCustomModels((prev) =>
-        prev.includes(initialAiModel) ? prev : [initialAiModel, ...prev],
+        prev.includes(initialAiModel) ? prev : [...prev, initialAiModel],
       );
     }
   }, []);
@@ -148,16 +159,49 @@ export function SettingsForm({
     }
   };
 
+  // 独立的连通性测试（保存后调用 或 手动点击"测试连接"）
+  const runTestConnection = async () => {
+    setAiTestResult({ loading: true });
+    try {
+      const res = await fetch('/api/test-ai-config', { method: 'POST' });
+      const data = await res.json();
+      setAiTestResult({
+        loading: false,
+        success: data.success,
+        models: data.models,
+        error: data.error,
+      });
+      if (data.success && data.models && data.models.length > 0) {
+        // 与当前列表比对，仅新模型才合并
+        const newModels = data.models.filter(
+          (m: string) => !presetModels.includes(m) && !customModels.includes(m),
+        );
+        if (newModels.length > 0) {
+          const merged = [...customModels, ...newModels];
+          setCustomModels(merged);
+          saveAIModels(merged).catch(() => {});
+        }
+      }
+    } catch {
+      setAiTestResult({ loading: false, success: false, error: '测试请求失败' });
+    }
+  };
+
   const handleSaveAIConfig = async () => {
     setAiSaving(true);
+    setAiTestResult(null);
     const { error } = await updateAIConfig(aiBaseUrl, aiApiKey, aiModel);
-    setAiSaving(false);
     if (error) {
+      setAiSaving(false);
       toast.error(error);
-    } else {
-      toast.success('AI 配置已保存');
-      router.refresh();
+      return;
     }
+    toast.success('AI 配置已保存');
+    router.refresh();
+    setAiSaving(false);
+
+    // 保存成功后发起连通性测试
+    await runTestConnection();
   };
 
   const handleSaveICP = async () => {
@@ -525,12 +569,46 @@ export function SettingsForm({
                   <Input
                     id="ai-base-url"
                     value={aiBaseUrl}
-                    onChange={(e) => setAiBaseUrl(e.target.value)}
+                    onChange={(e) => {
+                      setAiBaseUrl(e.target.value);
+                      setAiTestResult(null);
+                    }}
                     placeholder="https://api.openai.com"
                   />
+                  <div className="pt-1">
+                    {aiTestResult ? (
+                      aiTestResult.loading ? (
+                        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          正在测试连接...
+                        </p>
+                      ) : aiTestResult.success ? (
+                        <p className="text-xs text-green-600 dark:text-green-400 inline-flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          连接成功
+                          {aiTestResult.models &&
+                            aiTestResult.models.length > 0 &&
+                            `，获取到 ${aiTestResult.models.length} 个模型`}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400 inline-flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          连接失败：{aiTestResult.error || '未知错误'}
+                        </p>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={runTestConnection}
+                        className="text-xs text-primary hover:underline cursor-pointer"
+                      >
+                        测试连接
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="ai-model">模型名称</Label>
+                  <Label htmlFor="ai-model">模型列表</Label>
                   <div className="relative">
                     <button
                       type="button"
@@ -643,7 +721,7 @@ export function SettingsForm({
                                 placeholder="输入模型名称，按回车添加..."
                                 className="flex h-8 w-full rounded border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                 autoComplete="off"
-                                name="new-model-name"
+                                data-1p-ignore
                                 autoFocus
                               />
                             ) : (
@@ -672,16 +750,24 @@ export function SettingsForm({
                     <Input
                       id="ai-api-key"
                       type={showAiKey ? 'text' : 'password'}
-                      value={showAiKey ? maskApiKey(aiApiKey) : aiApiKey}
-                      onChange={(e) => setAiApiKey(e.target.value)}
-                      readOnly={showAiKey && aiApiKey.length > 0}
+                      value={maskApiKey(aiApiKey)}
+                      onChange={(e) => {
+                        setAiApiKey(e.target.value);
+                        setAiTestResult(null);
+                      }}
+                      readOnly={!showAiKey}
                       placeholder="sk-..."
+                      onFocus={(e) => {
+                        if (showAiKey) {
+                          e.target.select();
+                        }
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowAiKey(!showAiKey)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      title={showAiKey ? '隐藏' : '查看（仅显示部分）'}
+                      title={showAiKey ? '取消编辑' : '编辑密钥（粘贴新密钥）'}
                     >
                       {showAiKey ? (
                         <EyeOff className="h-4 w-4" />

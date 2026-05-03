@@ -505,6 +505,13 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+do $$ begin
+  create policy "site_config_admin_insert" on site_config for insert with check (
+    exists (select 1 from user_settings where user_id = auth.uid() and is_admin = true)
+  );
+exception when duplicate_object then null;
+end $$;
+
 -- 初始配置项（已存在则跳过）
 insert into site_config (key, value, description) values
   ('maintenance_mode', 'false', '维护模式开关'),

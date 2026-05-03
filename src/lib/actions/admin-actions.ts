@@ -122,6 +122,39 @@ export async function toggleDeployNotify(): Promise<ActionResult> {
   return {};
 }
 
+export async function saveAIModels(models: string[]): Promise<ActionResult> {
+  if (!(await isSuperAdmin())) return { error: '无权限' };
+
+  const supabase = await createClient();
+
+  // 先尝试 update
+  const { error: updateErr } = await supabase
+    .from('site_config')
+    .update({ value: JSON.stringify(models), updated_at: new Date().toISOString() })
+    .eq('key', 'ai_models');
+
+  if (updateErr) {
+    return { error: `保存模型列表失败: ${updateErr.message}` };
+  }
+
+  // update 成功但可能行不存在（affected rows = 0），尝试 insert
+  const { data: existing } = await supabase
+    .from('site_config')
+    .select('key')
+    .eq('key', 'ai_models')
+    .maybeSingle();
+
+  if (!existing) {
+    const { error: insertErr } = await supabase
+      .from('site_config')
+      .insert({ key: 'ai_models', value: JSON.stringify(models) });
+
+    if (insertErr) return { error: `保存模型列表失败: ${insertErr.message}` };
+  }
+
+  return {};
+}
+
 export async function updateICPConfig(
   number: string,
   visible: boolean,

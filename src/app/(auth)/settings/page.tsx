@@ -20,6 +20,7 @@ export default async function SettingsPage() {
   let aiBaseUrl = '';
   let aiApiKey = '';
   let aiModel = '';
+  let aiModels: string[] = [];
   let icpNumber = '';
   let icpVisible = false;
   let showDeployNotify = false;
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
         'ai_base_url',
         'ai_api_key',
         'ai_model',
+        'ai_models',
         'icp_number',
         'icp_visible',
         'show_deploy_notify',
@@ -44,6 +46,7 @@ export default async function SettingsPage() {
     aiBaseUrl = config.ai_base_url ?? '';
     aiApiKey = config.ai_api_key ?? '';
     aiModel = config.ai_model ?? '';
+    try { aiModels = JSON.parse(config.ai_models || '[]'); } catch { aiModels = []; }
     icpNumber = config.icp_number ?? '';
     icpVisible = config.icp_visible === 'true';
     showDeployNotify = config.show_deploy_notify === 'true';
@@ -59,6 +62,7 @@ export default async function SettingsPage() {
         aiBaseUrl={aiBaseUrl}
         aiApiKey={aiApiKey}
         aiModel={aiModel}
+        aiModels={aiModels}
         icpNumber={icpNumber}
         icpVisible={icpVisible}
         showDeployNotify={showDeployNotify}
