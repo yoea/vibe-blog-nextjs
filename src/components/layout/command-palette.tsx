@@ -242,14 +242,14 @@ export function CommandPalette() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         showCloseButton={false}
-        className="top-[18%] -translate-y-0 max-w-lg w-[90vw] p-0 gap-0 ring-1 ring-white/20 bg-white/80 dark:bg-gray-900/85 backdrop-blur-2xl shadow-2xl border-0 overflow-hidden"
+        className="top-[18%] -translate-y-0 max-w-lg w-[90vw] p-0 gap-0 ring-1 ring-white/20 bg-white/80 dark:bg-gray-900/85 backdrop-blur-2xl shadow-2xl border-0 overflow-hidden flex flex-col max-h-[70vh]"
       >
         <DialogTitle className="sr-only">命令面板</DialogTitle>
         <Command
-          className="rounded-none border-0 shadow-none w-full overflow-hidden"
+          className="rounded-none border-0 shadow-none w-full flex flex-col flex-1 min-h-0"
           shouldFilter={false}
         >
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/50 dark:border-gray-700/50 shrink-0">
             <Search className="h-5 w-5 text-gray-400 shrink-0" />
             <CommandInput
               placeholder="搜索..."
@@ -257,7 +257,7 @@ export function CommandPalette() {
               onValueChange={setSearchQuery}
             />
           </div>
-          <CommandList className="max-h-60">
+          <CommandList className="flex-1 overflow-y-auto overscroll-contain">
             <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
               {searchQuery.trim() && !isSearching
                 ? '未找到相关文章'
@@ -329,7 +329,7 @@ export function CommandPalette() {
               </CommandGroup>
             )}
           </CommandList>
-          <div className="hidden sm:flex items-center justify-center gap-4 px-5 pt-4 pb-2 border-t border-gray-200/50 dark:border-gray-700/50">
+          <div className="hidden sm:flex items-center justify-center gap-4 px-5 pt-4 pb-2 border-t border-gray-200/50 dark:border-gray-700/50 shrink-0">
             <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
               <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 font-mono text-[10px] text-gray-500 dark:text-gray-400">
                 ↑↓
