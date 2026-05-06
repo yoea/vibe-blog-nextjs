@@ -17,22 +17,17 @@ import { toast } from 'sonner';
 import {
   Plus,
   Trash2,
-  ArrowUpDown,
   Hash,
-  Calendar,
-  User,
   TrendingUp,
 } from 'lucide-react';
 import type { TagWithCreator } from '@/lib/db/queries';
 
-type SortKey = 'created_at' | 'post_count' | 'created_by' | 'name';
+type SortKey = 'name' | 'post_count';
 
 const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ElementType }[] =
   [
-    { key: 'created_at', label: '创建时间', icon: Calendar },
-    { key: 'post_count', label: '引用次数', icon: TrendingUp },
-    { key: 'created_by', label: '创建人', icon: User },
     { key: 'name', label: '名称', icon: Hash },
+    { key: 'post_count', label: '引用次数', icon: TrendingUp },
   ];
 
 interface Props {
@@ -63,19 +58,16 @@ export function TagManager({
   const sortedTags = useMemo(() => {
     const copy = [...tags];
     switch (sortBy) {
-      case 'created_at':
-        return copy.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
       case 'post_count':
         return copy.sort((a, b) => b.post_count - a.post_count);
-      case 'created_by':
-        return copy.sort((a, b) =>
-          (a.author_name ?? '').localeCompare(b.author_name ?? ''),
-        );
       case 'name':
-        return copy.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+        return copy.sort((a, b) => {
+          const aIsEn = /^[a-zA-Z]/.test(a.name);
+          const bIsEn = /^[a-zA-Z]/.test(b.name);
+          if (aIsEn && !bIsEn) return -1;
+          if (!aIsEn && bIsEn) return 1;
+          return a.name.localeCompare(b.name, 'zh-CN');
+        });
       default:
         return copy;
     }
@@ -143,40 +135,44 @@ export function TagManager({
   return (
     <div className="space-y-4">
       {/* Stats + controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>{tags.length} 个标签</span>
           <span className="text-border">|</span>
           <span>共引用 {totalPosts} 次</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <div className="flex items-center gap-1 border rounded-md p-0.5">
             {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setSortBy(key)}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm sm:text-xs transition-colors ${
                   sortBy === key
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="h-3 w-3" />
-                <span className="hidden sm:inline">{label}</span>
+                <Icon className="h-4 w-4 sm:h-3 sm:w-3" />
+                <span>{label}</span>
               </button>
             ))}
           </div>
           {currentUserId && showCreate && (
-            <Button size="sm" onClick={() => setShowCreateDialog(true)}>
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1">新建标签</span>
+            <Button
+              size="sm"
+              onClick={() => setShowCreateDialog(true)}
+              className="text-sm sm:text-xs"
+            >
+              <Plus className="h-4 w-4 sm:h-3 sm:w-3" />
+              <span className="ml-1">新建</span>
             </Button>
           )}
         </div>
       </div>
 
       {/* Tag list */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         {sortedTags.map((tag) => {
           const isOwner =
             tag.created_by !== null && currentUserId === tag.created_by;
@@ -185,24 +181,24 @@ export function TagManager({
           return (
             <div
               key={tag.id}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border hover:shadow-sm transition-shadow"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border hover:shadow-sm transition-shadow"
               title={creatorLabel ? `创建者: ${creatorLabel}` : undefined}
             >
               <Link
                 href={`/tags/${encodeURIComponent(tag.slug)}`}
-                className="text-sm font-medium hover:underline"
+                className="text-[13px] sm:text-sm font-medium hover:underline"
                 style={{ color: tag.color }}
               >
                 {tag.name}
               </Link>
-              <span className="text-xs text-muted-foreground">
+              <span className="hidden sm:inline text-xs text-muted-foreground">
                 ({tag.post_count})
               </span>
               {canDelete && (
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(tag)}
-                  className="ml-1 p-0.5 rounded text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                  className="p-0.5 rounded text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                   title="删除标签"
                 >
                   <Trash2 className="h-3 w-3" />
